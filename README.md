@@ -5,6 +5,7 @@ Install KAI OS with Homebrew:
 ```bash
 brew tap morning-verlu/tap
 brew install kaios
+kaios doctor
 kaios run "analyze crypto market"
 kaios ps <run-id>
 ```
