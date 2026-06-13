@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.7/kaios-0.1.7.tar"
-  sha256 "109717b089de36b46d8bf7faaf2a8a2766679846ddcb346d3df99810b04ec9c4"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.8/kaios-0.1.8.tar"
+  sha256 "cc8a4ad741fe1bc48d8a4b30b16d432d60637d99fe827688eebd57819d75f1fe"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
