@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.77/kaios-0.1.77.tar"
-  sha256 "85c38beed10d51a6da394da2ffd5fae316085a12aa02e01f7167ea6b69f69b73"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.78/kaios-0.1.78.tar"
+  sha256 "e0e52694888dbf758fd0bfaa7709e745899b1d2ea16349183ccd76f946e6ca50"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.77", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.78", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -274,7 +274,7 @@ class Kaios < Formula
     assert_match "kaios replay --file #{capsule_path}", latest_capsule
     capsule_json_file = Pathname.new(capsule_path).read
     assert_match '"schema": "kaios.run-capsule/v1"', capsule_json_file
-    assert_match '"version": "0.1.77"', capsule_json_file
+    assert_match '"version": "0.1.78"', capsule_json_file
     assert_match '"snapshotSha256"', capsule_json_file
     assert_match '"embeddedSnapshotSha256"', capsule_json_file
     assert_match '"traceSha256"', capsule_json_file
@@ -596,7 +596,7 @@ class Kaios < Formula
     assert_match "ci_artifact_paths: artifacts/kaios-verify.json, artifacts/kaios-run.capsule.json, artifacts/kaios-bug-report.json", init_ci
     assert_match "git add kaios.json .github/workflows/kaios.yml", init_ci
     workflow = (testpath/".github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.77"', workflow
+    assert_match 'KAIOS_VERSION: "0.1.78"', workflow
     assert_match "KAIOS_MODEL_PROVIDER: mock", workflow
     assert_match "set -euo pipefail", workflow
     assert_match %q(kaios gate --config 'kaios.json' --summary-out "$GITHUB_STEP_SUMMARY" --json | tee artifacts/kaios-verify.json), workflow
@@ -619,10 +619,14 @@ class Kaios < Formula
     assert_match "KAI OS gate", gate
     assert_match "schema: kaios.verify/v1", gate
     assert_match "status: ready", gate
+    assert_match "gate_status: ready", gate
     assert_match "evidence: valid (kaios.evidence/v1)", gate
     gate_json = shell_output("#{bin}/kaios gate --json")
     assert_match '"schema": "kaios.verify/v1"', gate_json
     assert_match '"schema": "kaios.evidence/v1"', gate_json
+    assert_match '"diagnosis": {', gate_json
+    assert_match '"status": "ready"', gate_json
+    assert_match '"fixFirst": null', gate_json
     assert_match '"status": "valid"', gate_json
     gate_summary_path = testpath/"artifacts/gate-summary.md"
     gate_summary = shell_output("#{bin}/kaios gate --summary-out #{gate_summary_path}")
@@ -643,6 +647,9 @@ class Kaios < Formula
     verify_evidence_json = shell_output("#{bin}/kaios verify --evidence-out #{verify_custom_evidence_path} --json --force")
     assert_match '"schema": "kaios.verify/v1"', verify_evidence_json
     assert_match '"schema": "kaios.evidence/v1"', verify_evidence_json
+    assert_match '"diagnosis": {', verify_evidence_json
+    assert_match '"status": "ready"', verify_evidence_json
+    assert_match '"fixFirst": null', verify_evidence_json
     assert_match '"status": "valid"', verify_evidence_json
     assert_match '"schema": "kaios.run-capsule/v1"', verify_custom_evidence_path.read
     verify_diff_summary_path = testpath/"artifacts/verify-diff-summary.md"
@@ -652,8 +659,12 @@ class Kaios < Formula
     )
     assert_match "schema: kaios.verify/v1", verify_evidence_diff
     assert_match "status: ready", verify_evidence_diff
+    assert_match "gate_status: different", verify_evidence_diff
     assert_match "evidence: different (kaios.evidence/v1)", verify_evidence_diff
     assert_match "diff: different", verify_evidence_diff
+    assert_match "why:", verify_evidence_diff
+    assert_match "baseline diff:", verify_evidence_diff
+    assert_match "fix_first: kaios diff", verify_evidence_diff
     assert_match "### What Changed", verify_diff_summary_path.read
     assert_match "| `task` |", verify_diff_summary_path.read
     assert_match "verify KAI OS project workflow", verify_diff_summary_path.read
@@ -687,7 +698,7 @@ class Kaios < Formula
     assert_match '"artifacts/kaios-run.capsule.json"', setup_json
     assert_match '"id": "verify-project"', setup_json
     setup_workflow = (testpath/"setup-fixture/.github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.77"', setup_workflow
+    assert_match 'KAIOS_VERSION: "0.1.78"', setup_workflow
     assert_match %q(kaios gate --config 'kaios.json' --summary-out "$GITHUB_STEP_SUMMARY" --json | tee artifacts/kaios-verify.json), setup_workflow
     assert_match "kaios bug-report --config 'kaios.json' --json --out artifacts/kaios-bug-report.json --force", setup_workflow
     assert_match "uses: actions/upload-artifact@v4", setup_workflow
