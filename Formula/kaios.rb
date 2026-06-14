@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.34/kaios-0.1.34.tar"
-  sha256 "7b7ef3866b931b29aa8573858206ccbeb764612ee94a4a027c4ddc528b97e2be"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.35/kaios-0.1.35.tar"
+  sha256 "c8ac995ac3141de4e042338d2e7c8642fd4955ce2299b6de47d6031387340e79"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,12 +16,13 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.34", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.35", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
     assert_match "http syscall: disabled", doctor
     assert_match "next:", doctor
+    assert_match "kaios demo", doctor
     assert_match "kaios analyze . --out artifacts/analysis.md --force", doctor
 
     help = shell_output("#{bin}/kaios help")
@@ -31,6 +32,11 @@ class Kaios < Formula
 
     empty_help = shell_output("#{bin}/kaios")
     assert_match "Quick start (3 steps):", empty_help
+
+    empty_runs = shell_output("#{bin}/kaios runs")
+    assert_match "No run snapshots found.", empty_runs
+    assert_match "kaios demo", empty_runs
+    assert_match "create your own run", empty_runs
 
     demo = shell_output("#{bin}/kaios demo")
     assert_match "KAI OS demo", demo
