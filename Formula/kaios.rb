@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.64/kaios-0.1.64.tar"
-  sha256 "f9b3560eaa62f81c9eabea10534210a82fcafaf9683bd4fafbac57e9c7fb6608"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.65/kaios-0.1.65.tar"
+  sha256 "57c7d2a9e81a706a1c1b3fa4ccd13352d6b10f7ed99a9185b24e59ebe1d96fea"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.64", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.65", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -154,7 +154,7 @@ class Kaios < Formula
     assert_match "kaios replay --file #{capsule_path}", latest_capsule
     capsule_json_file = Pathname.new(capsule_path).read
     assert_match '"schema": "kaios.run-capsule/v1"', capsule_json_file
-    assert_match '"version": "0.1.64"', capsule_json_file
+    assert_match '"version": "0.1.65"', capsule_json_file
     assert_match '"snapshotSha256"', capsule_json_file
     assert_match '"embeddedSnapshotSha256"', capsule_json_file
     assert_match '"traceSha256"', capsule_json_file
@@ -325,6 +325,9 @@ class Kaios < Formula
     missing_custom_config = shell_output("#{bin}/kaios config validate --config workflows/research.json 2>&1", 1)
     assert_match "kaios setup --config workflows/research.json --ci", missing_custom_config
     refute_match "kaios init --template default", missing_custom_config
+    missing_custom_config_json = shell_output("#{bin}/kaios config validate --config workflows/research.json --json 2>&1", 1)
+    assert_match '"next"', missing_custom_config_json
+    assert_match '"kaios setup --config workflows/research.json --ci"', missing_custom_config_json
 
     http_doctor = shell_output("KAIOS_HTTP_ALLOWLIST=example.com #{bin}/kaios doctor")
     assert_match "http syscall: 1 allowlist rule(s): example.com", http_doctor
@@ -441,12 +444,15 @@ class Kaios < Formula
     assert_match '"schema": "kaios.config-validation/v1"', retry_validate_json
     assert_match '"valid": true', retry_validate_json
     assert_match '"workflowName": "retry"', retry_validate_json
+    assert_match '"next"', retry_validate_json
+    assert_match '"kaios verify --config retry.json --evidence --force"', retry_validate_json
+    assert_match '"kaios config show --config retry.json"', retry_validate_json
 
     init_ci = shell_output("#{bin}/kaios init --template research --ci")
     assert_match "created_ci:", init_ci
     assert_match "git add kaios.json .github/workflows/kaios.yml", init_ci
     workflow = (testpath/".github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.64"', workflow
+    assert_match 'KAIOS_VERSION: "0.1.65"', workflow
     assert_match "KAIOS_MODEL_PROVIDER: mock", workflow
     assert_match "kaios verify --config 'kaios.json' --evidence --force", workflow
     assert_match "uses: actions/upload-artifact@v4", workflow
@@ -493,7 +499,7 @@ class Kaios < Formula
     assert_match '"requestedTemplate": "research"', setup_json
     assert_match '"action": "existing"', setup_json
     setup_workflow = (testpath/"setup-fixture/.github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.64"', setup_workflow
+    assert_match 'KAIOS_VERSION: "0.1.65"', setup_workflow
     assert_match "kaios verify --config 'kaios.json' --evidence --force", setup_workflow
     assert_match "uses: actions/upload-artifact@v4", setup_workflow
     verify_output = shell_output("cd setup-fixture && #{bin}/kaios verify")
