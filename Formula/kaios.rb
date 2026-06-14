@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.29/kaios-0.1.29.tar"
-  sha256 "3dc08d416d438c98de65ec6c5ba442e69d85f01ad7f10f6e3f1157e412658d40"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.30/kaios-0.1.30.tar"
+  sha256 "6372be349c1decce7ef18fda5834f103d99eafd35ffa0cf7bb5b024ed79a766c"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.29", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.30", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -81,6 +81,13 @@ class Kaios < Formula
     trace_json = shell_output("#{bin}/kaios trace #{run_id} --json")
     assert_match '"schema": "kaios.process-trace/v1"', trace_json
     assert_match '"processCount": 3', trace_json
+    trace_out = shell_output("#{bin}/kaios trace #{run_id} --json --out artifacts/trace.json")
+    assert_match "trace:", trace_out
+    assert_match "format: json", trace_out
+    assert_match '"schema": "kaios.process-trace/v1"', (testpath/"artifacts/trace.json").read
+    protected_trace = shell_output("#{bin}/kaios trace #{run_id} --json --out artifacts/trace.json 2>&1", 1)
+    assert_match "already exists", protected_trace
+    assert_match "Use --force", protected_trace
 
     (testpath/"README.md").write "# KAI OS\nContext fixture\n"
     (testpath/".kaiosignore").write "secrets/\n"
