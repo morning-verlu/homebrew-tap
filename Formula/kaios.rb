@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.39/kaios-0.1.39.tar"
-  sha256 "e1b32630d0ee12d7983830cb25c782aba725326dccec3e3168dd8cde47b9522c"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.40/kaios-0.1.40.tar"
+  sha256 "b815fc1a7e918fdb6cd994062552e20bfec9d60705da0cc2cd7966829b25bd7d"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.39", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.40", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -41,6 +41,9 @@ class Kaios < Formula
     assert_match "No run snapshots found.", empty_runs
     assert_match "kaios demo", empty_runs
     assert_match "create your own run", empty_runs
+    empty_runs_json = shell_output("#{bin}/kaios runs --json")
+    assert_match '"schema": "kaios.runs/v1"', empty_runs_json
+    assert_match '"count": 0', empty_runs_json
 
     unexpected_runs = shell_output("#{bin}/kaios runs extra 2>&1", 1)
     assert_match "Unexpected runs argument 'extra'.", unexpected_runs
@@ -60,6 +63,10 @@ class Kaios < Formula
     runs_after_demo = shell_output("#{bin}/kaios runs")
     assert_match "ALIAS", runs_after_demo
     assert_match "latest", runs_after_demo
+    runs_after_demo_json = shell_output("#{bin}/kaios runs --json")
+    assert_match '"schema": "kaios.runs/v1"', runs_after_demo_json
+    assert_match '"latestRunId": "run-', runs_after_demo_json
+    assert_match '"alias": "latest"', runs_after_demo_json
     unexpected_ps = shell_output("#{bin}/kaios ps latest extra 2>&1", 1)
     assert_match "Unexpected ps argument 'extra'.", unexpected_ps
     assert_match "Usage: kaios ps <run-id|latest>", unexpected_ps
@@ -82,6 +89,10 @@ class Kaios < Formula
     assert_match "Usage: kaios run", named_run_help
     assert_match "kaios run --index . --out artifacts/project.md --force", named_run_help
     refute_match "run_id:", named_run_help
+
+    runs_help = shell_output("#{bin}/kaios help runs")
+    assert_match "kaios runs --json", runs_help
+    assert_match "kaios.runs/v1", runs_help
 
     doctor_help = shell_output("#{bin}/kaios help doctor")
     assert_match "kaios doctor --json", doctor_help
