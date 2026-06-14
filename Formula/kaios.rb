@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.17/kaios-0.1.17.tar"
-  sha256 "985b03e5982bd8ce23c6a16482a3fdb7bd4f9899056b137ecf14474dd6a5261c"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.18/kaios-0.1.18.tar"
+  sha256 "d0fd6cca104718df67ba67b783193298f3215d1faccfb3bfbb8e0ff8a9934df7"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -20,11 +20,11 @@ class Kaios < Formula
     assert_match "summary: ready", doctor
     assert_match "http syscall: disabled", doctor
     assert_match "next:", doctor
-    assert_match "kaios analyze . --out artifacts/analysis.md", doctor
+    assert_match "kaios analyze . --out artifacts/analysis.md --force", doctor
 
     help = shell_output("#{bin}/kaios help")
     assert_match "Quick start (3 steps):", help
-    assert_match "kaios run --index . --out artifacts/project.md", help
+    assert_match "kaios run --index . --out artifacts/project.md --force", help
 
     http_doctor = shell_output("KAIOS_HTTP_ALLOWLIST=example.com #{bin}/kaios doctor")
     assert_match "http syscall: 1 allowlist rule(s): example.com", http_doctor
@@ -68,6 +68,9 @@ class Kaios < Formula
     artifact = (testpath/"artifacts/context.md").read
     assert_match "Workspace Index:", artifact
     assert_match "Context:", artifact
+
+    forced_context_output = shell_output("#{bin}/kaios run --index . --context . --out artifacts/context.md --force \"summarize this project\"")
+    assert_match "success: true", forced_context_output
 
     (testpath/"retry.json").write <<~JSON
       {
