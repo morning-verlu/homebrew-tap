@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.31/kaios-0.1.31.tar"
-  sha256 "f2d31b8a9a9285f3a0958b732b1d7d07899da9a2dbc744f7f1a52b0f30815441"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.32/kaios-0.1.32.tar"
+  sha256 "82bcde350608e4f2ce8a19520510fbf0e23de9691619e07d05ced94ac52dcb64"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.31", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.32", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -26,10 +26,19 @@ class Kaios < Formula
 
     help = shell_output("#{bin}/kaios help")
     assert_match "Quick start (3 steps):", help
-    assert_match "kaios run --index . --out artifacts/project.md --force", help
+    assert_match "kaios demo", help
+    assert_match "kaios run --index . --out artifacts/project.md --trace-out artifacts/trace.json --force", help
 
     empty_help = shell_output("#{bin}/kaios")
     assert_match "Quick start (3 steps):", empty_help
+
+    demo = shell_output("#{bin}/kaios demo")
+    assert_match "KAI OS demo", demo
+    assert_match "provider: mock", demo
+    assert_match "processes:", demo
+    assert_match "planner", demo
+    demo_trace = demo[/trace: (\S+)/, 1]
+    assert_match '"schema": "kaios.process-trace/v1"', Pathname.new(demo_trace).read
 
     run_help = shell_output("#{bin}/kaios run --help")
     assert_match "Usage: kaios run", run_help
