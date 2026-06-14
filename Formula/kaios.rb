@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.27/kaios-0.1.27.tar"
-  sha256 "b9bc90ff61bb917a836e35b6bd26db452d9267a224dbebbd3ba758693760cd45"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.28/kaios-0.1.28.tar"
+  sha256 "1b7404aa61e9521c3ba313401efa93da43b91b3f30b3d62a9da831a450167f03"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.27", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.28", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -48,6 +48,11 @@ class Kaios < Formula
 
     named_config_show_help = shell_output("#{bin}/kaios help config show")
     assert_match "Usage: kaios config show", named_config_show_help
+
+    missing_config = shell_output("#{bin}/kaios config show 2>&1", 1)
+    assert_match "Config file", missing_config
+    assert_match "kaios init --template default", missing_config
+    assert_match "kaios config templates", missing_config
 
     http_doctor = shell_output("KAIOS_HTTP_ALLOWLIST=example.com #{bin}/kaios doctor")
     assert_match "http syscall: 1 allowlist rule(s): example.com", http_doctor
