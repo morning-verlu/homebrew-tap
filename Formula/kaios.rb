@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.38/kaios-0.1.38.tar"
-  sha256 "a24c4adf0541be981cd00ab685f731638f0940d952f328f2895de1d056963a03"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.39/kaios-0.1.39.tar"
+  sha256 "e1b32630d0ee12d7983830cb25c782aba725326dccec3e3168dd8cde47b9522c"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.38", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.39", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -24,6 +24,10 @@ class Kaios < Formula
     assert_match "next:", doctor
     assert_match "kaios demo", doctor
     assert_match "kaios analyze . --out artifacts/analysis.md --force", doctor
+    doctor_json = shell_output("#{bin}/kaios doctor --json")
+    assert_match '"schema": "kaios.doctor/v1"', doctor_json
+    assert_match '"status": "ready"', doctor_json
+    assert_match '"name": "model provider"', doctor_json
 
     help = shell_output("#{bin}/kaios help")
     assert_match "Quick start (3 steps):", help
@@ -78,6 +82,10 @@ class Kaios < Formula
     assert_match "Usage: kaios run", named_run_help
     assert_match "kaios run --index . --out artifacts/project.md --force", named_run_help
     refute_match "run_id:", named_run_help
+
+    doctor_help = shell_output("#{bin}/kaios help doctor")
+    assert_match "kaios doctor --json", doctor_help
+    assert_match "kaios.doctor/v1", doctor_help
 
     config_show_help = shell_output("#{bin}/kaios config show --help")
     assert_match "Usage: kaios config show", config_show_help
