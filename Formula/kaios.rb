@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.74/kaios-0.1.74.tar"
-  sha256 "60488fc8ea49e7124dad8b91eb4caea1025dd956d4b3dca9cb36f0c9be1533f9"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.75/kaios-0.1.75.tar"
+  sha256 "fd4c00beccaf2d75928d0cdf51f7264c3fcb513d35c6ca20f7ee6af59e137255"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.74", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.75", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -41,14 +41,14 @@ class Kaios < Formula
     missing_verify = shell_output("cd missing-config-fixture && #{bin}/kaios verify --evidence --force 2>&1", 2)
     assert_match "status: failed", missing_verify
     assert_match "kaios setup --ci", missing_verify
-    refute_match "kaios verify --config kaios.json --evidence --force", missing_verify
+    refute_match "kaios gate --config kaios.json", missing_verify
     missing_custom_verify = shell_output(
-      "cd missing-config-fixture && #{bin}/kaios verify --config workflows/research.json --evidence --force 2>&1",
+      "cd missing-config-fixture && #{bin}/kaios gate --config workflows/research.json 2>&1",
       2,
     )
     assert_match "status: failed", missing_custom_verify
     assert_match "kaios setup --config workflows/research.json --ci", missing_custom_verify
-    refute_match "kaios verify --config workflows/research.json --evidence --force", missing_custom_verify
+    refute_match "kaios gate --config workflows/research.json", missing_custom_verify
     (testpath/"missing-config-fixture").rmtree
 
     (testpath/"invalid-setup-fixture").mkpath
@@ -73,16 +73,16 @@ class Kaios < Formula
     assert_match '"kaios config validate --config kaios.json --json"', invalid_doctor
     assert_match '"fix kaios.json or rerun kaios setup --ci --force"', invalid_doctor
     assert_match '"id": "repair-config"', invalid_doctor
-    refute_match '"kaios verify --config kaios.json --evidence --force"', invalid_doctor
+    refute_match '"kaios gate --config kaios.json"', invalid_doctor
     invalid_bug_report = shell_output("cd invalid-config-fixture && #{bin}/kaios bug-report --json")
     assert_match '"kaios config validate --config kaios.json --json"', invalid_bug_report
     assert_match '"fix kaios.json or rerun kaios setup --ci --force"', invalid_bug_report
     assert_match '"id": "repair-config"', invalid_bug_report
-    refute_match '"kaios verify --config kaios.json --evidence --force"', invalid_bug_report
+    refute_match '"kaios gate --config kaios.json"', invalid_bug_report
     invalid_verify = shell_output("cd invalid-config-fixture && #{bin}/kaios verify --evidence --force 2>&1", 2)
     assert_match "kaios config validate --config kaios.json --json", invalid_verify
     assert_match "fix kaios.json or rerun kaios setup --ci --force", invalid_verify
-    refute_match "kaios verify --config kaios.json --evidence --force", invalid_verify
+    refute_match "kaios gate --config kaios.json", invalid_verify
     (testpath/"invalid-config-fixture").rmtree
 
     (testpath/"custom-config-diagnostics-fixture").mkpath
@@ -97,14 +97,14 @@ class Kaios < Formula
     assert_match '"config": "', custom_doctor
     assert_match "workflows/research.json", custom_doctor
     assert_match '"status": "ready"', custom_doctor
-    assert_match '"kaios verify --config workflows/research.json --evidence --force"', custom_doctor
+    assert_match '"kaios gate --config workflows/research.json"', custom_doctor
     assert_match '"id": "verify-project"', custom_doctor
     refute_match "Config field 'name' cannot be blank.", custom_doctor
     custom_bug_report = shell_output(
       "cd custom-config-diagnostics-fixture && #{bin}/kaios bug-report --config workflows/research.json --json",
     )
     assert_match '"valid": true', custom_bug_report
-    assert_match '"kaios verify --config workflows/research.json --evidence --force"', custom_bug_report
+    assert_match '"kaios gate --config workflows/research.json"', custom_bug_report
     assert_match '"kaios doctor --config workflows/research.json --json"', custom_bug_report
     assert_match '"id": "run-diagnostics"', custom_bug_report
     refute_match '"kaios setup --ci"', custom_bug_report
@@ -260,7 +260,7 @@ class Kaios < Formula
     assert_match "kaios replay --file #{capsule_path}", latest_capsule
     capsule_json_file = Pathname.new(capsule_path).read
     assert_match '"schema": "kaios.run-capsule/v1"', capsule_json_file
-    assert_match '"version": "0.1.74"', capsule_json_file
+    assert_match '"version": "0.1.75"', capsule_json_file
     assert_match '"snapshotSha256"', capsule_json_file
     assert_match '"embeddedSnapshotSha256"', capsule_json_file
     assert_match '"traceSha256"', capsule_json_file
@@ -419,12 +419,15 @@ class Kaios < Formula
     assert_match "Usage: kaios gate", gate_help
     assert_match "production Agent Gate", gate_help
     assert_match "verify --evidence --force", gate_help
+    assert_match "--summary-out", gate_help
+    assert_match "GITHUB_STEP_SUMMARY", gate_help
     assert_match "kaios.verify/v1", gate_help
     verify_help = shell_output("#{bin}/kaios help verify")
     assert_match "Usage: kaios verify", verify_help
     assert_match "one-command readiness and evidence gate", verify_help
     assert_match "--evidence", verify_help
     assert_match "--evidence-out", verify_help
+    assert_match "--summary-out", verify_help
     assert_match "kaios.verify/v1", verify_help
     init_help = shell_output("#{bin}/kaios help init")
     assert_match "--ci", init_help
@@ -558,7 +561,7 @@ class Kaios < Formula
     assert_match '"valid": true', retry_validate_json
     assert_match '"workflowName": "retry"', retry_validate_json
     assert_match '"next"', retry_validate_json
-    assert_match '"kaios verify --config retry.json --evidence --force"', retry_validate_json
+    assert_match '"kaios gate --config retry.json"', retry_validate_json
     assert_match '"kaios config show --config retry.json"', retry_validate_json
 
     init_ci = shell_output("#{bin}/kaios init --template research --ci")
@@ -567,10 +570,10 @@ class Kaios < Formula
     assert_match "ci_artifact_paths: artifacts/kaios-verify.json, artifacts/kaios-run.capsule.json, artifacts/kaios-bug-report.json", init_ci
     assert_match "git add kaios.json .github/workflows/kaios.yml", init_ci
     workflow = (testpath/".github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.74"', workflow
+    assert_match 'KAIOS_VERSION: "0.1.75"', workflow
     assert_match "KAIOS_MODEL_PROVIDER: mock", workflow
     assert_match "set -euo pipefail", workflow
-    assert_match "kaios verify --config 'kaios.json' --evidence --json --force | tee artifacts/kaios-verify.json", workflow
+    assert_match %q(kaios gate --config 'kaios.json' --summary-out "$GITHUB_STEP_SUMMARY" --json | tee artifacts/kaios-verify.json), workflow
     assert_match "kaios bug-report --config 'kaios.json' --json --out artifacts/kaios-bug-report.json --force", workflow
     assert_match "uses: actions/upload-artifact@v4", workflow
     assert_match "name: kaios-agent-gate", workflow
@@ -595,6 +598,18 @@ class Kaios < Formula
     assert_match '"schema": "kaios.verify/v1"', gate_json
     assert_match '"schema": "kaios.evidence/v1"', gate_json
     assert_match '"status": "valid"', gate_json
+    gate_summary_path = testpath/"artifacts/gate-summary.md"
+    gate_summary = shell_output("#{bin}/kaios gate --summary-out #{gate_summary_path}")
+    assert_match "summary: #{gate_summary_path}", gate_summary
+    assert_match "## KAI OS gate", gate_summary_path.read
+    assert_match "| Readiness | `ready` |", gate_summary_path.read
+    assert_match "| Process metrics | `recorded` |", gate_summary_path.read
+    assert_match "| Evidence | `valid` |", gate_summary_path.read
+    gate_summary_json_path = testpath/"artifacts/gate-summary-json.md"
+    gate_summary_json = shell_output("#{bin}/kaios gate --json --summary-out #{gate_summary_json_path}")
+    assert_match '"schema": "kaios.verify/v1"', gate_summary_json
+    refute_match "summary:", gate_summary_json
+    assert_match "## KAI OS gate", gate_summary_json_path.read
     verify_custom_evidence_path = testpath/"artifacts/verify.capsule.json"
     verify_evidence_json = shell_output("#{bin}/kaios verify --evidence-out #{verify_custom_evidence_path} --json --force")
     assert_match '"schema": "kaios.verify/v1"', verify_evidence_json
@@ -611,10 +626,10 @@ class Kaios < Formula
     assert_match '"valid": true', init_ci_validate_json
     assert_match '"id": "verify-project"', init_ci_validate_json
     configured_doctor = shell_output("#{bin}/kaios doctor")
-    assert_match "kaios verify --config kaios.json --evidence --force", configured_doctor
+    assert_match "kaios gate --config kaios.json", configured_doctor
     refute_match "kaios setup --ci", configured_doctor
     configured_bug_report_json = shell_output("#{bin}/kaios bug-report --json")
-    assert_match '"kaios verify --config kaios.json --evidence --force"', configured_bug_report_json
+    assert_match '"kaios gate --config kaios.json"', configured_bug_report_json
     assert_match '"id": "verify-project"', configured_bug_report_json
     refute_match '"kaios setup --ci"', configured_bug_report_json
 
@@ -636,8 +651,8 @@ class Kaios < Formula
     assert_match '"artifacts/kaios-run.capsule.json"', setup_json
     assert_match '"id": "verify-project"', setup_json
     setup_workflow = (testpath/"setup-fixture/.github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.74"', setup_workflow
-    assert_match "kaios verify --config 'kaios.json' --evidence --json --force | tee artifacts/kaios-verify.json", setup_workflow
+    assert_match 'KAIOS_VERSION: "0.1.75"', setup_workflow
+    assert_match %q(kaios gate --config 'kaios.json' --summary-out "$GITHUB_STEP_SUMMARY" --json | tee artifacts/kaios-verify.json), setup_workflow
     assert_match "kaios bug-report --config 'kaios.json' --json --out artifacts/kaios-bug-report.json --force", setup_workflow
     assert_match "uses: actions/upload-artifact@v4", setup_workflow
     assert_match "name: kaios-agent-gate", setup_workflow
@@ -655,9 +670,9 @@ class Kaios < Formula
     custom_setup = shell_output("cd custom-config-fixture && #{bin}/kaios setup --config workflows/research.json --ci")
     assert_match "doctor: ready", custom_setup
     assert_match "validation: valid", custom_setup
-    assert_match "kaios verify --config workflows/research.json --evidence --force", custom_setup
+    assert_match "kaios gate --config workflows/research.json", custom_setup
     custom_workflow = (testpath/"custom-config-fixture/.github/workflows/kaios.yml").read
-    assert_match "kaios verify --config 'workflows/research.json' --evidence --json --force | tee artifacts/kaios-verify.json", custom_workflow
+    assert_match %q(kaios gate --config 'workflows/research.json' --summary-out "$GITHUB_STEP_SUMMARY" --json | tee artifacts/kaios-verify.json), custom_workflow
     assert_match "kaios bug-report --config 'workflows/research.json' --json --out artifacts/kaios-bug-report.json --force", custom_workflow
     custom_verify = shell_output("cd custom-config-fixture && #{bin}/kaios verify --config workflows/research.json")
     assert_match "status: ready", custom_verify
