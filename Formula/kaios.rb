@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.30/kaios-0.1.30.tar"
-  sha256 "6372be349c1decce7ef18fda5834f103d99eafd35ffa0cf7bb5b024ed79a766c"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.31/kaios-0.1.31.tar"
+  sha256 "f2d31b8a9a9285f3a0958b732b1d7d07899da9a2dbc744f7f1a52b0f30815441"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.30", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.31", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -35,6 +35,7 @@ class Kaios < Formula
     assert_match "Usage: kaios run", run_help
     assert_match "Examples:", run_help
     assert_match "No API key is required by default", run_help
+    assert_match "--trace-out", run_help
     assert_match "kaios trace <run-id>", run_help
     refute_match "run_id:", run_help
 
@@ -88,6 +89,10 @@ class Kaios < Formula
     protected_trace = shell_output("#{bin}/kaios trace #{run_id} --json --out artifacts/trace.json 2>&1", 1)
     assert_match "already exists", protected_trace
     assert_match "Use --force", protected_trace
+
+    run_trace_output = shell_output("#{bin}/kaios run --trace-out artifacts/run-trace.json \"record trace artifact\"")
+    assert_match "trace:", run_trace_output
+    assert_match '"schema": "kaios.process-trace/v1"', (testpath/"artifacts/run-trace.json").read
 
     (testpath/"README.md").write "# KAI OS\nContext fixture\n"
     (testpath/".kaiosignore").write "secrets/\n"
