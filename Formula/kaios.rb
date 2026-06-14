@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.53/kaios-0.1.53.tar"
-  sha256 "5428c9e5da08bd8a27559bd77e886b6ee9cc87882446e185b7f149f932faf7f2"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.54/kaios-0.1.54.tar"
+  sha256 "b684d9b959d8fba1000a7cd6c2c9f9d84520d9232df7da8acdb6bce49be0b16d"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.53", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.54", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -90,6 +90,10 @@ class Kaios < Formula
     assert_match "Usage: kaios replay", replay_help
     assert_match "kaios.run-replay/v1", replay_help
     assert_match "never calls a model provider", replay_help
+    diff_help = shell_output("#{bin}/kaios help diff")
+    assert_match "Usage: kaios diff", diff_help
+    assert_match "kaios.run-diff/v1", diff_help
+    assert_match "ignores run ids, timestamps, and duration noise", diff_help
     latest_capsule = shell_output("#{bin}/kaios capsule latest")
     assert_match "schema: kaios.run-capsule/v1", latest_capsule
     assert_match "valid: true", latest_capsule
@@ -99,7 +103,7 @@ class Kaios < Formula
     assert_match "kaios replay --file #{capsule_path}", latest_capsule
     capsule_json_file = Pathname.new(capsule_path).read
     assert_match '"schema": "kaios.run-capsule/v1"', capsule_json_file
-    assert_match '"version": "0.1.53"', capsule_json_file
+    assert_match '"version": "0.1.54"', capsule_json_file
     assert_match '"snapshotSha256"', capsule_json_file
     assert_match '"embeddedSnapshotSha256"', capsule_json_file
     assert_match '"traceSha256"', capsule_json_file
@@ -143,6 +147,38 @@ class Kaios < Formula
     assert_match "Use --force", protected_capsule
     forced_capsule = shell_output("#{bin}/kaios capsule latest --force")
     assert_match "capsule:", forced_capsule
+
+    diff_baseline_run = shell_output("#{bin}/kaios run \"compare stable task\"")
+    diff_baseline_id = diff_baseline_run[/run_id: (run-[a-f0-9]+)/, 1]
+    diff_baseline_path = testpath/"artifacts/diff-baseline.capsule.json"
+    shell_output("#{bin}/kaios capsule #{diff_baseline_id} --out #{diff_baseline_path}")
+    diff_same_run = shell_output("#{bin}/kaios run \"compare stable task\"")
+    diff_same_id = diff_same_run[/run_id: (run-[a-f0-9]+)/, 1]
+    diff_same_path = testpath/"artifacts/diff-same.capsule.json"
+    shell_output("#{bin}/kaios capsule #{diff_same_id} --out #{diff_same_path}")
+    diff_changed_run = shell_output("#{bin}/kaios run \"compare changed task\"")
+    diff_changed_id = diff_changed_run[/run_id: (run-[a-f0-9]+)/, 1]
+    diff_changed_path = testpath/"artifacts/diff-changed.capsule.json"
+    shell_output("#{bin}/kaios capsule #{diff_changed_id} --out #{diff_changed_path}")
+    runs_dir = testpath/".kaios/runs"
+    detached_runs_dir = testpath/".kaios/runs.detached-for-diff"
+    runs_dir.rename(detached_runs_dir)
+    begin
+      same_diff = shell_output("#{bin}/kaios diff #{diff_baseline_path} #{diff_same_path}")
+      assert_match "schema: kaios.run-diff/v1", same_diff
+      assert_match "status: same", same_diff
+      assert_match "same: true", same_diff
+      same_diff_json = shell_output("#{bin}/kaios diff --left #{diff_baseline_path} --right #{diff_same_path} --json")
+      assert_match '"schema": "kaios.run-diff/v1"', same_diff_json
+      assert_match '"result": "same"', same_diff_json
+      assert_match '"same": true', same_diff_json
+      changed_diff = shell_output("#{bin}/kaios diff #{diff_baseline_path} #{diff_changed_path} --check 2>&1", 1)
+      assert_match "status: different", changed_diff
+      assert_match "task:", changed_diff
+      assert_match "finalOutputSha256:", changed_diff
+    ensure
+      detached_runs_dir.rename(runs_dir) if detached_runs_dir.exist?
+    end
     bug_report_help = shell_output("#{bin}/kaios help bug-report")
     assert_match "Usage: kaios bug-report", bug_report_help
     assert_match "kaios.bug-report/v1", bug_report_help
@@ -333,7 +369,7 @@ class Kaios < Formula
     assert_match "created_ci:", init_ci
     assert_match "git add kaios.json .github/workflows/kaios.yml", init_ci
     workflow = (testpath/".github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.53"', workflow
+    assert_match 'KAIOS_VERSION: "0.1.54"', workflow
     assert_match "KAIOS_MODEL_PROVIDER: mock", workflow
     assert_match "kaios verify --config 'kaios.json'", workflow
     refute_match "kaios doctor --json", workflow
@@ -361,7 +397,7 @@ class Kaios < Formula
     assert_match '"requestedTemplate": "research"', setup_json
     assert_match '"action": "existing"', setup_json
     setup_workflow = (testpath/"setup-fixture/.github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.53"', setup_workflow
+    assert_match 'KAIOS_VERSION: "0.1.54"', setup_workflow
     assert_match "kaios verify --config 'kaios.json'", setup_workflow
     verify_output = shell_output("cd setup-fixture && #{bin}/kaios verify")
     assert_match "schema: kaios.verify/v1", verify_output
