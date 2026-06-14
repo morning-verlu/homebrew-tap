@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.25/kaios-0.1.25.tar"
-  sha256 "aeffbd5c8c05b4ec2554abba3eb128407477a340bf89d59ad7edc46353d5a92a"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.26/kaios-0.1.26.tar"
+  sha256 "65a9fe9b780a072463e0f9af5a10ac3741d35ff91ac93dc4c2253941d6de991a"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.25", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.26", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -41,6 +41,13 @@ class Kaios < Formula
     assert_match "Usage: kaios run", named_run_help
     assert_match "kaios run --index . --out artifacts/project.md --force", named_run_help
     refute_match "run_id:", named_run_help
+
+    config_show_help = shell_output("#{bin}/kaios config show --help")
+    assert_match "Usage: kaios config show", config_show_help
+    assert_match "Examples:", config_show_help
+
+    named_config_show_help = shell_output("#{bin}/kaios help config show")
+    assert_match "Usage: kaios config show", named_config_show_help
 
     http_doctor = shell_output("KAIOS_HTTP_ALLOWLIST=example.com #{bin}/kaios doctor")
     assert_match "http syscall: 1 allowlist rule(s): example.com", http_doctor
