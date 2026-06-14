@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.26/kaios-0.1.26.tar"
-  sha256 "65a9fe9b780a072463e0f9af5a10ac3741d35ff91ac93dc4c2253941d6de991a"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.27/kaios-0.1.27.tar"
+  sha256 "b9bc90ff61bb917a836e35b6bd26db452d9267a224dbebbd3ba758693760cd45"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.26", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.27", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -54,6 +54,10 @@ class Kaios < Formula
 
     output = shell_output("#{bin}/kaios run \"analyze crypto market\"")
     assert_match "success: true", output
+
+    missing_run = shell_output("#{bin}/kaios inspect run-missing 2>&1", 1)
+    assert_match "Run 'kaios runs' to list saved run ids.", missing_run
+    assert_match "Saved runs:", missing_run
 
     bad_option = shell_output("#{bin}/kaios run --bad-option hello 2>&1", 1)
     assert_match "Unknown run option '--bad-option'", bad_option
