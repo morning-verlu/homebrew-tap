@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.54/kaios-0.1.54.tar"
-  sha256 "b684d9b959d8fba1000a7cd6c2c9f9d84520d9232df7da8acdb6bce49be0b16d"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.55/kaios-0.1.55.tar"
+  sha256 "0ac142e0d37c2a643c28b57ef6e4564815169aed605d0501515645c3b223a1bf"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.54", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.55", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -61,7 +61,7 @@ class Kaios < Formula
     assert_match "planner", demo
     assert_match "kaios ps latest", demo
     assert_match "kaios trace latest --json", demo
-    assert_match "kaios capsule latest", demo
+    assert_match "kaios evidence latest", demo
     demo_trace = demo[/trace: (\S+)/, 1]
     assert_match '"schema": "kaios.process-trace/v1"', Pathname.new(demo_trace).read
 
@@ -94,6 +94,10 @@ class Kaios < Formula
     assert_match "Usage: kaios diff", diff_help
     assert_match "kaios.run-diff/v1", diff_help
     assert_match "ignores run ids, timestamps, and duration noise", diff_help
+    evidence_help = shell_output("#{bin}/kaios help evidence")
+    assert_match "Usage: kaios evidence", evidence_help
+    assert_match "kaios.evidence/v1", evidence_help
+    assert_match "packaging, validating, replaying", evidence_help
     latest_capsule = shell_output("#{bin}/kaios capsule latest")
     assert_match "schema: kaios.run-capsule/v1", latest_capsule
     assert_match "valid: true", latest_capsule
@@ -103,7 +107,7 @@ class Kaios < Formula
     assert_match "kaios replay --file #{capsule_path}", latest_capsule
     capsule_json_file = Pathname.new(capsule_path).read
     assert_match '"schema": "kaios.run-capsule/v1"', capsule_json_file
-    assert_match '"version": "0.1.54"', capsule_json_file
+    assert_match '"version": "0.1.55"', capsule_json_file
     assert_match '"snapshotSha256"', capsule_json_file
     assert_match '"embeddedSnapshotSha256"', capsule_json_file
     assert_match '"traceSha256"', capsule_json_file
@@ -147,6 +151,21 @@ class Kaios < Formula
     assert_match "Use --force", protected_capsule
     forced_capsule = shell_output("#{bin}/kaios capsule latest --force")
     assert_match "capsule:", forced_capsule
+    evidence_path = testpath/"artifacts/evidence.capsule.json"
+    latest_evidence = shell_output("#{bin}/kaios evidence latest --out #{evidence_path} --force")
+    assert_match "schema: kaios.evidence/v1", latest_evidence
+    assert_match "status: valid", latest_evidence
+    assert_match "capsule_status: valid", latest_evidence
+    assert_match "replay_status: valid", latest_evidence
+    assert_match "diff_status: skipped", latest_evidence
+    assert_match '"schema": "kaios.run-capsule/v1"', evidence_path.read
+    latest_evidence_json = shell_output("#{bin}/kaios evidence latest --out #{evidence_path} --json --force")
+    assert_match '"schema": "kaios.evidence/v1"', latest_evidence_json
+    assert_match '"status": "valid"', latest_evidence_json
+    assert_match '"status": "skipped"', latest_evidence_json
+    protected_evidence = shell_output("#{bin}/kaios evidence latest --out #{evidence_path} 2>&1", 1)
+    assert_match "already exists", protected_evidence
+    assert_match "Use --force", protected_evidence
 
     diff_baseline_run = shell_output("#{bin}/kaios run \"compare stable task\"")
     diff_baseline_id = diff_baseline_run[/run_id: (run-[a-f0-9]+)/, 1]
@@ -160,6 +179,11 @@ class Kaios < Formula
     diff_changed_id = diff_changed_run[/run_id: (run-[a-f0-9]+)/, 1]
     diff_changed_path = testpath/"artifacts/diff-changed.capsule.json"
     shell_output("#{bin}/kaios capsule #{diff_changed_id} --out #{diff_changed_path}")
+    evidence_changed_path = testpath/"artifacts/evidence-changed.capsule.json"
+    changed_evidence = shell_output("#{bin}/kaios evidence #{diff_changed_id} --out #{evidence_changed_path} --baseline #{diff_baseline_path} --check 2>&1", 1)
+    assert_match "schema: kaios.evidence/v1", changed_evidence
+    assert_match "status: different", changed_evidence
+    assert_match "diff_status: different", changed_evidence
     runs_dir = testpath/".kaios/runs"
     detached_runs_dir = testpath/".kaios/runs.detached-for-diff"
     runs_dir.rename(detached_runs_dir)
@@ -195,7 +219,7 @@ class Kaios < Formula
     assert_match '"latestRun"', bug_report_json
     assert_match '"trace"', bug_report_json
     assert_match '"kaios setup --ci"', bug_report_json
-    assert_match '"kaios capsule latest --check"', bug_report_json
+    assert_match '"kaios evidence latest"', bug_report_json
     refute_match "kaios run --index .", bug_report_json
     bug_report_out = shell_output("#{bin}/kaios bug-report --out artifacts/kaios-bug-report.md --force")
     assert_match "bug_report:", bug_report_out
@@ -257,7 +281,7 @@ class Kaios < Formula
     assert_match "kaios ps latest", output
     assert_match "kaios inspect latest", output
     assert_match "kaios trace latest", output
-    assert_match "kaios capsule latest", output
+    assert_match "kaios evidence latest", output
     assert_match "kaios report latest", output
     assert_match "kaios export latest", output
 
@@ -369,7 +393,7 @@ class Kaios < Formula
     assert_match "created_ci:", init_ci
     assert_match "git add kaios.json .github/workflows/kaios.yml", init_ci
     workflow = (testpath/".github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.54"', workflow
+    assert_match 'KAIOS_VERSION: "0.1.55"', workflow
     assert_match "KAIOS_MODEL_PROVIDER: mock", workflow
     assert_match "kaios verify --config 'kaios.json'", workflow
     refute_match "kaios doctor --json", workflow
@@ -397,7 +421,7 @@ class Kaios < Formula
     assert_match '"requestedTemplate": "research"', setup_json
     assert_match '"action": "existing"', setup_json
     setup_workflow = (testpath/"setup-fixture/.github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.54"', setup_workflow
+    assert_match 'KAIOS_VERSION: "0.1.55"', setup_workflow
     assert_match "kaios verify --config 'kaios.json'", setup_workflow
     verify_output = shell_output("cd setup-fixture && #{bin}/kaios verify")
     assert_match "schema: kaios.verify/v1", verify_output
