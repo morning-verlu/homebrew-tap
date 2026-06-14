@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.14/kaios-0.1.14.tar"
-  sha256 "238384e9e4ae60e1d1a7231d59c1fef6c61c00ce1f241b9bc2e5280e77396f30"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.15/kaios-0.1.15.tar"
+  sha256 "4b44f7f884766dcc3e7dbefe197434c0ae51c31813c4af5a04c625ad6b5fcea6"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -37,6 +37,13 @@ class Kaios < Formula
     preview = shell_output("#{bin}/kaios context .")
     assert_match "README.md", preview
     refute_match "secrets/private.md", preview
+
+    analysis_output = shell_output("#{bin}/kaios analyze . --out artifacts/analysis.md")
+    assert_match "analysis:", analysis_output
+    analysis = (testpath/"artifacts/analysis.md").read
+    assert_match "KAI OS Workspace Analysis", analysis
+    assert_match "Language Map", analysis
+    assert_match "Suggested KAI OS Commands", analysis
 
     index = shell_output("#{bin}/kaios index .")
     assert_match "WORKSPACE INDEX", index
