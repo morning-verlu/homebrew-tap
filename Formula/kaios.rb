@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.23/kaios-0.1.23.tar"
-  sha256 "4ca147a3b12863ec382ab158ab5e6d7b123d19aae08805512163a53722201209"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.24/kaios-0.1.24.tar"
+  sha256 "ca32ebba3af11a56461714311dfd662acfafa0c18630963a830c6b984f815543"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.23", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.24", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -27,6 +27,9 @@ class Kaios < Formula
     help = shell_output("#{bin}/kaios help")
     assert_match "Quick start (3 steps):", help
     assert_match "kaios run --index . --out artifacts/project.md --force", help
+
+    empty_help = shell_output("#{bin}/kaios")
+    assert_match "Quick start (3 steps):", empty_help
 
     run_help = shell_output("#{bin}/kaios run --help")
     assert_match "Usage: kaios run", run_help
@@ -47,6 +50,7 @@ class Kaios < Formula
 
     bad_option = shell_output("#{bin}/kaios run --bad-option hello 2>&1", 1)
     assert_match "Unknown run option '--bad-option'", bad_option
+    assert_match "Run 'kaios help run' for examples.", bad_option
 
     run_id = output[/run_id: (run-[a-f0-9]+)/, 1]
     assert_match "RUN #{run_id}", shell_output("#{bin}/kaios ps #{run_id}")
