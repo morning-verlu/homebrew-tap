@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.18/kaios-0.1.18.tar"
-  sha256 "d0fd6cca104718df67ba67b783193298f3215d1faccfb3bfbb8e0ff8a9934df7"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.19/kaios-0.1.19.tar"
+  sha256 "8b7c4342bd75ee1a76fe6d7b3aa85b5003429009d13e55d1cf1948a5f03dad23"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,6 +16,8 @@ class Kaios < Formula
   end
 
   test do
+    assert_match "kaios 0.1.19", shell_output("#{bin}/kaios --version")
+
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
     assert_match "http syscall: disabled", doctor
