@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.40/kaios-0.1.40.tar"
-  sha256 "b815fc1a7e918fdb6cd994062552e20bfec9d60705da0cc2cd7966829b25bd7d"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.41/kaios-0.1.41.tar"
+  sha256 "5788e42f8f77881b5010ccf59cd8324a672a83b39e3aee5f9987b737465777a5"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.40", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.41", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -104,6 +104,9 @@ class Kaios < Formula
 
     named_config_show_help = shell_output("#{bin}/kaios help config show")
     assert_match "Usage: kaios config show", named_config_show_help
+    config_validate_help = shell_output("#{bin}/kaios help config validate")
+    assert_match "kaios config validate --json", config_validate_help
+    assert_match "kaios.config-validation/v1", config_validate_help
 
     missing_config = shell_output("#{bin}/kaios config show 2>&1", 1)
     assert_match "Config file", missing_config
@@ -214,5 +217,9 @@ class Kaios < Formula
 
     retry_show = shell_output("#{bin}/kaios config show --config retry.json")
     assert_match "retries=2", retry_show
+    retry_validate_json = shell_output("#{bin}/kaios config validate --config retry.json --json")
+    assert_match '"schema": "kaios.config-validation/v1"', retry_validate_json
+    assert_match '"valid": true', retry_validate_json
+    assert_match '"workflowName": "retry"', retry_validate_json
   end
 end
