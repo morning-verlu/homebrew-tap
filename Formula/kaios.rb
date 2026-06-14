@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.50/kaios-0.1.50.tar"
-  sha256 "f60204a085c688bd820387ff865fdf6369247fd39c93abee6a41de67d213ae58"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.51/kaios-0.1.51.tar"
+  sha256 "29cb08413cc9df07d9267b509ca18fca949528d36bd347a07062df278fbd3cd4"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.50", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.51", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -61,6 +61,7 @@ class Kaios < Formula
     assert_match "planner", demo
     assert_match "kaios ps latest", demo
     assert_match "kaios trace latest --json", demo
+    assert_match "kaios capsule latest", demo
     demo_trace = demo[/trace: (\S+)/, 1]
     assert_match '"schema": "kaios.process-trace/v1"', Pathname.new(demo_trace).read
 
@@ -81,6 +82,33 @@ class Kaios < Formula
     latest_trace_check = shell_output("#{bin}/kaios trace latest --check")
     assert_match "status: valid", latest_trace_check
     assert_match "processes: 3", latest_trace_check
+    capsule_help = shell_output("#{bin}/kaios help capsule")
+    assert_match "Usage: kaios capsule", capsule_help
+    assert_match "kaios.run-capsule/v1", capsule_help
+    latest_capsule = shell_output("#{bin}/kaios capsule latest")
+    assert_match "schema: kaios.run-capsule/v1", latest_capsule
+    assert_match "valid: true", latest_capsule
+    assert_match "snapshot_sha256:", latest_capsule
+    assert_match "trace_sha256:", latest_capsule
+    capsule_path = latest_capsule[/capsule: (\S+)/, 1]
+    capsule_json_file = Pathname.new(capsule_path).read
+    assert_match '"schema": "kaios.run-capsule/v1"', capsule_json_file
+    assert_match '"version": "0.1.51"', capsule_json_file
+    assert_match '"snapshotSha256"', capsule_json_file
+    assert_match '"traceSha256"', capsule_json_file
+    assert_match '"snapshot"', capsule_json_file
+    assert_match '"trace"', capsule_json_file
+    latest_capsule_check = shell_output("#{bin}/kaios capsule latest --check")
+    assert_match "status: valid", latest_capsule_check
+    assert_match "processes: 3", latest_capsule_check
+    latest_capsule_json = shell_output("#{bin}/kaios capsule latest --json")
+    assert_match '"schema": "kaios.run-capsule/v1"', latest_capsule_json
+    assert_match '"validation"', latest_capsule_json
+    protected_capsule = shell_output("#{bin}/kaios capsule latest 2>&1", 1)
+    assert_match "already exists", protected_capsule
+    assert_match "Use --force", protected_capsule
+    forced_capsule = shell_output("#{bin}/kaios capsule latest --force")
+    assert_match "capsule:", forced_capsule
     bug_report_help = shell_output("#{bin}/kaios help bug-report")
     assert_match "Usage: kaios bug-report", bug_report_help
     assert_match "kaios.bug-report/v1", bug_report_help
@@ -97,6 +125,7 @@ class Kaios < Formula
     assert_match '"latestRun"', bug_report_json
     assert_match '"trace"', bug_report_json
     assert_match '"kaios setup --ci"', bug_report_json
+    assert_match '"kaios capsule latest --check"', bug_report_json
     refute_match "kaios run --index .", bug_report_json
     bug_report_out = shell_output("#{bin}/kaios bug-report --out artifacts/kaios-bug-report.md --force")
     assert_match "bug_report:", bug_report_out
@@ -158,6 +187,7 @@ class Kaios < Formula
     assert_match "kaios ps latest", output
     assert_match "kaios inspect latest", output
     assert_match "kaios trace latest", output
+    assert_match "kaios capsule latest", output
     assert_match "kaios report latest", output
     assert_match "kaios export latest", output
 
@@ -188,6 +218,12 @@ class Kaios < Formula
     trace_help = shell_output("#{bin}/kaios help trace")
     assert_match "kaios trace latest --check", trace_help
     assert_match "validate the trace contract", trace_help
+    run_capsule_json = shell_output("#{bin}/kaios capsule #{run_id} --json")
+    assert_match '"schema": "kaios.run-capsule/v1"', run_capsule_json
+    assert_match "\"runId\": \"#{run_id}\"", run_capsule_json
+    run_capsule_check = shell_output("#{bin}/kaios capsule #{run_id} --check")
+    assert_match "schema: kaios.run-capsule/v1", run_capsule_check
+    assert_match "status: valid", run_capsule_check
     latest_run_trace_json = shell_output("#{bin}/kaios trace latest --json")
     assert_match "\"runId\": \"#{run_id}\"", latest_run_trace_json
     trace_out = shell_output("#{bin}/kaios trace #{run_id} --json --out artifacts/trace.json")
@@ -263,7 +299,7 @@ class Kaios < Formula
     assert_match "created_ci:", init_ci
     assert_match "git add kaios.json .github/workflows/kaios.yml", init_ci
     workflow = (testpath/".github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.50"', workflow
+    assert_match 'KAIOS_VERSION: "0.1.51"', workflow
     assert_match "KAIOS_MODEL_PROVIDER: mock", workflow
     assert_match "kaios verify --config 'kaios.json'", workflow
     refute_match "kaios doctor --json", workflow
@@ -291,7 +327,7 @@ class Kaios < Formula
     assert_match '"requestedTemplate": "research"', setup_json
     assert_match '"action": "existing"', setup_json
     setup_workflow = (testpath/"setup-fixture/.github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.50"', setup_workflow
+    assert_match 'KAIOS_VERSION: "0.1.51"', setup_workflow
     assert_match "kaios verify --config 'kaios.json'", setup_workflow
     verify_output = shell_output("cd setup-fixture && #{bin}/kaios verify")
     assert_match "schema: kaios.verify/v1", verify_output
