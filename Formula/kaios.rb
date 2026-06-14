@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.46/kaios-0.1.46.tar"
-  sha256 "1160d8b8a83a736c68ce670b95800686f1220efa877ffc4da544038519f104c4"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.47/kaios-0.1.47.tar"
+  sha256 "16035cd6cdfe0fb415ce77e9dd515badadece4abeb48c596150bd052164664ad"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.46", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.47", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -255,7 +255,7 @@ class Kaios < Formula
     assert_match "created_ci:", init_ci
     assert_match "git add kaios.json .github/workflows/kaios.yml", init_ci
     workflow = (testpath/".github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.46"', workflow
+    assert_match 'KAIOS_VERSION: "0.1.47"', workflow
     assert_match "KAIOS_MODEL_PROVIDER: mock", workflow
     assert_match "kaios verify --config 'kaios.json'", workflow
     refute_match "kaios doctor --json", workflow
@@ -277,7 +277,7 @@ class Kaios < Formula
     assert_match '"requestedTemplate": "research"', setup_json
     assert_match '"action": "existing"', setup_json
     setup_workflow = (testpath/"setup-fixture/.github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.46"', setup_workflow
+    assert_match 'KAIOS_VERSION: "0.1.47"', setup_workflow
     assert_match "kaios verify --config 'kaios.json'", setup_workflow
     verify_output = shell_output("cd setup-fixture && #{bin}/kaios verify")
     assert_match "schema: kaios.verify/v1", verify_output
@@ -300,5 +300,20 @@ class Kaios < Formula
     assert_match "doctor: ready", custom_verify
     assert_match "config: valid", custom_verify
     refute_match "Config field 'name' cannot be blank.", custom_verify
+
+    (testpath/"bad-env-fixture").mkpath
+    bad_env = "KAIOS_MODEL_PROVIDER=openai OPENAI_API_KEY=secret-key KAIOS_MEMORY_STORE=bad-store"
+    bad_env_doctor = shell_output("cd bad-env-fixture && #{bad_env} #{bin}/kaios doctor 2>&1", 2)
+    assert_match "summary: 2 failed", bad_env_doctor
+    assert_match "OPENAI_MODEL is required", bad_env_doctor
+    bad_env_setup = shell_output("cd bad-env-fixture && #{bad_env} #{bin}/kaios setup")
+    assert_match "doctor: ready with 2 warning(s)", bad_env_setup
+    assert_match "model provider: OPENAI_MODEL is required", bad_env_setup
+    bad_env_verify = shell_output("cd bad-env-fixture && #{bad_env} #{bin}/kaios verify")
+    assert_match "status: ready", bad_env_verify
+    assert_match "doctor: ready with 2 warning(s)", bad_env_verify
+    assert_match "memory store: Unsupported KAIOS_MEMORY_STORE 'bad-store'", bad_env_verify
+    refute_match "secret-key", bad_env_setup
+    refute_match "secret-key", bad_env_verify
   end
 end
