@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.13/kaios-0.1.13.tar"
-  sha256 "fe883e5c2c63380a8760b2cdd666c3bd429aee4db974aabd1b067e3738f6a57b"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.14/kaios-0.1.14.tar"
+  sha256 "238384e9e4ae60e1d1a7231d59c1fef6c61c00ce1f241b9bc2e5280e77396f30"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -38,9 +38,17 @@ class Kaios < Formula
     assert_match "README.md", preview
     refute_match "secrets/private.md", preview
 
-    context_output = shell_output("#{bin}/kaios run --context . --out artifacts/context.md \"summarize this project\"")
+    index = shell_output("#{bin}/kaios index .")
+    assert_match "WORKSPACE INDEX", index
+    assert_match "README.md", index
+    refute_match "secrets/private.md", index
+
+    context_output = shell_output("#{bin}/kaios run --index . --context . --out artifacts/context.md \"summarize this project\"")
+    assert_match "index:", context_output
     assert_match "context: 1 file(s)", context_output
-    assert_match "Context:", (testpath/"artifacts/context.md").read
+    artifact = (testpath/"artifacts/context.md").read
+    assert_match "Workspace Index:", artifact
+    assert_match "Context:", artifact
 
     (testpath/"retry.json").write <<~JSON
       {
