@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.49/kaios-0.1.49.tar"
-  sha256 "8b07c686bb3eba69251091fb3357c5910e0b10f858488b7451b8690a15dcab32"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.50/kaios-0.1.50.tar"
+  sha256 "f60204a085c688bd820387ff865fdf6369247fd39c93abee6a41de67d213ae58"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.49", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.50", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -43,7 +43,9 @@ class Kaios < Formula
     empty_runs = shell_output("#{bin}/kaios runs")
     assert_match "No run snapshots found.", empty_runs
     assert_match "kaios demo", empty_runs
-    assert_match "create your own run", empty_runs
+    assert_match "kaios setup --ci", empty_runs
+    assert_match "kaios verify", empty_runs
+    refute_match "kaios run \"task\"", empty_runs
     empty_runs_json = shell_output("#{bin}/kaios runs --json")
     assert_match '"schema": "kaios.runs/v1"', empty_runs_json
     assert_match '"count": 0', empty_runs_json
@@ -261,7 +263,7 @@ class Kaios < Formula
     assert_match "created_ci:", init_ci
     assert_match "git add kaios.json .github/workflows/kaios.yml", init_ci
     workflow = (testpath/".github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.49"', workflow
+    assert_match 'KAIOS_VERSION: "0.1.50"', workflow
     assert_match "KAIOS_MODEL_PROVIDER: mock", workflow
     assert_match "kaios verify --config 'kaios.json'", workflow
     refute_match "kaios doctor --json", workflow
@@ -289,7 +291,7 @@ class Kaios < Formula
     assert_match '"requestedTemplate": "research"', setup_json
     assert_match '"action": "existing"', setup_json
     setup_workflow = (testpath/"setup-fixture/.github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.49"', setup_workflow
+    assert_match 'KAIOS_VERSION: "0.1.50"', setup_workflow
     assert_match "kaios verify --config 'kaios.json'", setup_workflow
     verify_output = shell_output("cd setup-fixture && #{bin}/kaios verify")
     assert_match "schema: kaios.verify/v1", verify_output
