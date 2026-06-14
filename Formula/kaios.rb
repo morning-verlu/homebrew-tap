@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.51/kaios-0.1.51.tar"
-  sha256 "29cb08413cc9df07d9267b509ca18fca949528d36bd347a07062df278fbd3cd4"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.52/kaios-0.1.52.tar"
+  sha256 "e30ac079f676c8b2cabeedcfec82acc9fd5cec8fe4b23a904b3e438248a0fbac"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.51", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.52", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -85,6 +85,7 @@ class Kaios < Formula
     capsule_help = shell_output("#{bin}/kaios help capsule")
     assert_match "Usage: kaios capsule", capsule_help
     assert_match "kaios.run-capsule/v1", capsule_help
+    assert_match "--file", capsule_help
     latest_capsule = shell_output("#{bin}/kaios capsule latest")
     assert_match "schema: kaios.run-capsule/v1", latest_capsule
     assert_match "valid: true", latest_capsule
@@ -93,8 +94,9 @@ class Kaios < Formula
     capsule_path = latest_capsule[/capsule: (\S+)/, 1]
     capsule_json_file = Pathname.new(capsule_path).read
     assert_match '"schema": "kaios.run-capsule/v1"', capsule_json_file
-    assert_match '"version": "0.1.51"', capsule_json_file
+    assert_match '"version": "0.1.52"', capsule_json_file
     assert_match '"snapshotSha256"', capsule_json_file
+    assert_match '"embeddedSnapshotSha256"', capsule_json_file
     assert_match '"traceSha256"', capsule_json_file
     assert_match '"snapshot"', capsule_json_file
     assert_match '"trace"', capsule_json_file
@@ -104,6 +106,24 @@ class Kaios < Formula
     latest_capsule_json = shell_output("#{bin}/kaios capsule latest --json")
     assert_match '"schema": "kaios.run-capsule/v1"', latest_capsule_json
     assert_match '"validation"', latest_capsule_json
+    shared_capsule_path = testpath/"artifacts/shared.capsule.json"
+    shared_capsule_path.write capsule_json_file
+    runs_dir = testpath/".kaios/runs"
+    detached_runs_dir = testpath/".kaios/runs.detached"
+    runs_dir.rename(detached_runs_dir)
+    begin
+      shared_capsule_check = shell_output("#{bin}/kaios capsule --file #{shared_capsule_path} --check")
+      assert_match "schema: kaios.run-capsule/v1", shared_capsule_check
+      assert_match "status: valid", shared_capsule_check
+      shared_capsule_summary = shell_output("#{bin}/kaios capsule --from #{shared_capsule_path}")
+      assert_match "schema: kaios.run-capsule/v1", shared_capsule_summary
+      assert_match "valid: true", shared_capsule_summary
+      shared_capsule_json = shell_output("#{bin}/kaios capsule --input #{shared_capsule_path} --json")
+      assert_match '"schema": "kaios.run-capsule/v1"', shared_capsule_json
+      assert_match '"embeddedSnapshotSha256"', shared_capsule_json
+    ensure
+      detached_runs_dir.rename(runs_dir) if detached_runs_dir.exist?
+    end
     protected_capsule = shell_output("#{bin}/kaios capsule latest 2>&1", 1)
     assert_match "already exists", protected_capsule
     assert_match "Use --force", protected_capsule
@@ -299,7 +319,7 @@ class Kaios < Formula
     assert_match "created_ci:", init_ci
     assert_match "git add kaios.json .github/workflows/kaios.yml", init_ci
     workflow = (testpath/".github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.51"', workflow
+    assert_match 'KAIOS_VERSION: "0.1.52"', workflow
     assert_match "KAIOS_MODEL_PROVIDER: mock", workflow
     assert_match "kaios verify --config 'kaios.json'", workflow
     refute_match "kaios doctor --json", workflow
@@ -327,7 +347,7 @@ class Kaios < Formula
     assert_match '"requestedTemplate": "research"', setup_json
     assert_match '"action": "existing"', setup_json
     setup_workflow = (testpath/"setup-fixture/.github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.51"', setup_workflow
+    assert_match 'KAIOS_VERSION: "0.1.52"', setup_workflow
     assert_match "kaios verify --config 'kaios.json'", setup_workflow
     verify_output = shell_output("cd setup-fixture && #{bin}/kaios verify")
     assert_match "schema: kaios.verify/v1", verify_output
