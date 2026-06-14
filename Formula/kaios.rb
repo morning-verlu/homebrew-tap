@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.36/kaios-0.1.36.tar"
-  sha256 "7231f1542fc9e7177c18afaf793f890bb3926ce7ea648756c7db6421235e683d"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.37/kaios-0.1.37.tar"
+  sha256 "e2a81e888e683e8ea56825106463c4741bc7275a57aa2a09d47ed81b7ac2ef18"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.36", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.37", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -53,6 +53,9 @@ class Kaios < Formula
     assert_match '"schema": "kaios.process-trace/v1"', Pathname.new(demo_trace).read
 
     assert_match "RUN", shell_output("#{bin}/kaios ps latest")
+    runs_after_demo = shell_output("#{bin}/kaios runs")
+    assert_match "ALIAS", runs_after_demo
+    assert_match "latest", runs_after_demo
     unexpected_ps = shell_output("#{bin}/kaios ps latest extra 2>&1", 1)
     assert_match "Unexpected ps argument 'extra'.", unexpected_ps
     assert_match "Usage: kaios ps <run-id|latest>", unexpected_ps

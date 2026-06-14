@@ -14,4 +14,4 @@ KAI OS is an AI Agent Operating System in Kotlin.
 
 - Website: https://morning-verlu.github.io/KAI/
 - Repository: https://github.com/morning-verlu/KAI
-- Release: https://github.com/morning-verlu/KAI/releases/tag/v0.1.36
+- Release: https://github.com/morning-verlu/KAI/releases/tag/v0.1.37
