@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.72/kaios-0.1.72.tar"
-  sha256 "5d21b8b9bac60db7685375b7054feb7ddad399ceaace1a8d0efbd5eabcb1ae8d"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.73/kaios-0.1.73.tar"
+  sha256 "b7530fcc0064bbf1e0d240ef9e862028247c6e7602691f80e8f80be2cb1079e7"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.72", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.73", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -195,9 +195,9 @@ class Kaios < Formula
     assert_match "KAI OS doctor", alias_status
     alias_runs = shell_output("cd alias-fixture && #{bin}/kaios ls")
     assert_match "RUNS", alias_runs
-    alias_proc = shell_output("cd alias-fixture && #{bin}/kaios proc latest")
+    alias_proc = shell_output("cd alias-fixture && #{bin}/kaios proc")
     assert_match "RUN run-", alias_proc
-    alias_audit = shell_output("cd alias-fixture && #{bin}/kaios audit latest --force")
+    alias_audit = shell_output("cd alias-fixture && #{bin}/kaios audit --force")
     assert_match "schema: kaios.evidence/v1", alias_audit
     alias_analyse = shell_output("cd alias-fixture && #{bin}/kaios analyse .")
     assert_match "# KAI OS Workspace Analysis", alias_analyse
@@ -212,13 +212,13 @@ class Kaios < Formula
     assert_match "provider: mock", demo
     assert_match "processes:", demo
     assert_match "planner", demo
-    assert_match "kaios ps latest", demo
-    assert_match "kaios trace latest --json", demo
-    assert_match "kaios evidence latest", demo
+    assert_match "kaios ps", demo
+    assert_match "kaios trace --json", demo
+    assert_match "kaios evidence", demo
     demo_trace = demo[/trace: (\S+)/, 1]
     assert_match '"schema": "kaios.process-trace/v1"', Pathname.new(demo_trace).read
 
-    assert_match "RUN", shell_output("#{bin}/kaios ps latest")
+    assert_match "RUN", shell_output("#{bin}/kaios ps")
     runs_after_demo = shell_output("#{bin}/kaios runs")
     assert_match "ALIAS", runs_after_demo
     assert_match "latest", runs_after_demo
@@ -228,11 +228,11 @@ class Kaios < Formula
     assert_match '"alias": "latest"', runs_after_demo_json
     unexpected_ps = shell_output("#{bin}/kaios ps latest extra 2>&1", 1)
     assert_match "Unexpected ps argument 'extra'.", unexpected_ps
-    assert_match "Usage: kaios ps <run-id|latest>", unexpected_ps
-    latest_trace_json = shell_output("#{bin}/kaios trace latest --json")
+    assert_match "Usage: kaios ps [run-id|latest]", unexpected_ps
+    latest_trace_json = shell_output("#{bin}/kaios trace --json")
     assert_match '"schema": "kaios.process-trace/v1"', latest_trace_json
     assert_match '"processCount": 3', latest_trace_json
-    latest_trace_check = shell_output("#{bin}/kaios trace latest --check")
+    latest_trace_check = shell_output("#{bin}/kaios trace --check")
     assert_match "status: valid", latest_trace_check
     assert_match "processes: 3", latest_trace_check
     capsule_help = shell_output("#{bin}/kaios help capsule")
@@ -251,7 +251,7 @@ class Kaios < Formula
     assert_match "Usage: kaios evidence", evidence_help
     assert_match "kaios.evidence/v1", evidence_help
     assert_match "packaging, validating, replaying", evidence_help
-    latest_capsule = shell_output("#{bin}/kaios capsule latest")
+    latest_capsule = shell_output("#{bin}/kaios capsule")
     assert_match "schema: kaios.run-capsule/v1", latest_capsule
     assert_match "valid: true", latest_capsule
     assert_match "snapshot_sha256:", latest_capsule
@@ -260,17 +260,17 @@ class Kaios < Formula
     assert_match "kaios replay --file #{capsule_path}", latest_capsule
     capsule_json_file = Pathname.new(capsule_path).read
     assert_match '"schema": "kaios.run-capsule/v1"', capsule_json_file
-    assert_match '"version": "0.1.72"', capsule_json_file
+    assert_match '"version": "0.1.73"', capsule_json_file
     assert_match '"snapshotSha256"', capsule_json_file
     assert_match '"embeddedSnapshotSha256"', capsule_json_file
     assert_match '"traceSha256"', capsule_json_file
     assert_match '"kaios replay --file <capsule.json>"', capsule_json_file
     assert_match '"snapshot"', capsule_json_file
     assert_match '"trace"', capsule_json_file
-    latest_capsule_check = shell_output("#{bin}/kaios capsule latest --check")
+    latest_capsule_check = shell_output("#{bin}/kaios capsule --check")
     assert_match "status: valid", latest_capsule_check
     assert_match "processes: 3", latest_capsule_check
-    latest_capsule_json = shell_output("#{bin}/kaios capsule latest --json")
+    latest_capsule_json = shell_output("#{bin}/kaios capsule --json")
     assert_match '"schema": "kaios.run-capsule/v1"', latest_capsule_json
     assert_match '"validation"', latest_capsule_json
     shared_capsule_path = testpath/"artifacts/shared.capsule.json"
@@ -299,24 +299,24 @@ class Kaios < Formula
     ensure
       detached_runs_dir.rename(runs_dir) if detached_runs_dir.exist?
     end
-    protected_capsule = shell_output("#{bin}/kaios capsule latest 2>&1", 1)
+    protected_capsule = shell_output("#{bin}/kaios capsule 2>&1", 1)
     assert_match "already exists", protected_capsule
     assert_match "Use --force", protected_capsule
-    forced_capsule = shell_output("#{bin}/kaios capsule latest --force")
+    forced_capsule = shell_output("#{bin}/kaios capsule --force")
     assert_match "capsule:", forced_capsule
     evidence_path = testpath/"artifacts/evidence.capsule.json"
-    latest_evidence = shell_output("#{bin}/kaios evidence latest --out #{evidence_path} --force")
+    latest_evidence = shell_output("#{bin}/kaios evidence --out #{evidence_path} --force")
     assert_match "schema: kaios.evidence/v1", latest_evidence
     assert_match "status: valid", latest_evidence
     assert_match "capsule_status: valid", latest_evidence
     assert_match "replay_status: valid", latest_evidence
     assert_match "diff_status: skipped", latest_evidence
     assert_match '"schema": "kaios.run-capsule/v1"', evidence_path.read
-    latest_evidence_json = shell_output("#{bin}/kaios evidence latest --out #{evidence_path} --json --force")
+    latest_evidence_json = shell_output("#{bin}/kaios evidence --out #{evidence_path} --json --force")
     assert_match '"schema": "kaios.evidence/v1"', latest_evidence_json
     assert_match '"status": "valid"', latest_evidence_json
     assert_match '"status": "skipped"', latest_evidence_json
-    protected_evidence = shell_output("#{bin}/kaios evidence latest --out #{evidence_path} 2>&1", 1)
+    protected_evidence = shell_output("#{bin}/kaios evidence --out #{evidence_path} 2>&1", 1)
     assert_match "already exists", protected_evidence
     assert_match "Use --force", protected_evidence
 
@@ -372,7 +372,7 @@ class Kaios < Formula
     assert_match '"latestRun"', bug_report_json
     assert_match '"trace"', bug_report_json
     assert_match '"kaios setup --ci"', bug_report_json
-    assert_match '"kaios evidence latest"', bug_report_json
+    assert_match '"kaios evidence"', bug_report_json
     assert_match '"nextActions": [', bug_report_json
     assert_match '"id": "package-evidence"', bug_report_json
     refute_match "kaios run --index .", bug_report_json
@@ -386,7 +386,7 @@ class Kaios < Formula
     assert_match "Examples:", run_help
     assert_match "No API key is required by default", run_help
     assert_match "--trace-out", run_help
-    assert_match "kaios trace latest", run_help
+    assert_match "kaios trace", run_help
     refute_match "run_id:", run_help
 
     named_run_help = shell_output("#{bin}/kaios help run")
@@ -442,12 +442,12 @@ class Kaios < Formula
 
     output = shell_output("#{bin}/kaios run \"analyze crypto market\"")
     assert_match "success: true", output
-    assert_match "kaios ps latest", output
-    assert_match "kaios inspect latest", output
-    assert_match "kaios trace latest", output
-    assert_match "kaios evidence latest", output
-    assert_match "kaios report latest", output
-    assert_match "kaios export latest", output
+    assert_match "kaios ps", output
+    assert_match "kaios inspect", output
+    assert_match "kaios trace", output
+    assert_match "kaios evidence", output
+    assert_match "kaios report", output
+    assert_match "kaios export", output
 
     missing_run = shell_output("#{bin}/kaios inspect run-missing 2>&1", 1)
     assert_match "Run 'kaios runs' to list saved run ids.", missing_run
@@ -463,7 +463,7 @@ class Kaios < Formula
 
     run_id = output[/run_id: (run-[a-f0-9]+)/, 1]
     assert_match "RUN #{run_id}", shell_output("#{bin}/kaios ps #{run_id}")
-    assert_match "RUN #{run_id}", shell_output("#{bin}/kaios ps latest")
+    assert_match "RUN #{run_id}", shell_output("#{bin}/kaios ps")
     trace = shell_output("#{bin}/kaios trace #{run_id}")
     assert_match "KAI PROCESS TRACE", trace
     assert_match "kaios.process-trace/v1", trace
@@ -474,7 +474,7 @@ class Kaios < Formula
     assert_match "schema: kaios.process-trace/v1", trace_check
     assert_match "status: valid", trace_check
     trace_help = shell_output("#{bin}/kaios help trace")
-    assert_match "kaios trace latest --check", trace_help
+    assert_match "kaios trace --check", trace_help
     assert_match "validate the trace contract", trace_help
     run_capsule_json = shell_output("#{bin}/kaios capsule #{run_id} --json")
     assert_match '"schema": "kaios.run-capsule/v1"', run_capsule_json
@@ -482,7 +482,7 @@ class Kaios < Formula
     run_capsule_check = shell_output("#{bin}/kaios capsule #{run_id} --check")
     assert_match "schema: kaios.run-capsule/v1", run_capsule_check
     assert_match "status: valid", run_capsule_check
-    latest_run_trace_json = shell_output("#{bin}/kaios trace latest --json")
+    latest_run_trace_json = shell_output("#{bin}/kaios trace --json")
     assert_match "\"runId\": \"#{run_id}\"", latest_run_trace_json
     trace_out = shell_output("#{bin}/kaios trace #{run_id} --json --out artifacts/trace.json")
     assert_match "trace:", trace_out
@@ -562,7 +562,7 @@ class Kaios < Formula
     assert_match "ci_artifact_paths: artifacts/kaios-verify.json, artifacts/kaios-run.capsule.json, artifacts/kaios-bug-report.json", init_ci
     assert_match "git add kaios.json .github/workflows/kaios.yml", init_ci
     workflow = (testpath/".github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.72"', workflow
+    assert_match 'KAIOS_VERSION: "0.1.73"', workflow
     assert_match "KAIOS_MODEL_PROVIDER: mock", workflow
     assert_match "set -euo pipefail", workflow
     assert_match "kaios verify --config 'kaios.json' --evidence --json --force | tee artifacts/kaios-verify.json", workflow
@@ -574,7 +574,7 @@ class Kaios < Formula
     assert_match "artifacts/kaios-bug-report.json", workflow
     refute_match "kaios doctor --json", workflow
     refute_match "kaios config validate --config 'kaios.json' --json", workflow
-    refute_match "kaios trace latest --check", workflow
+    refute_match "kaios trace --check", workflow
     verify_evidence_path = testpath/"artifacts/kaios-run.capsule.json"
     verify_evidence = shell_output("#{bin}/kaios verify --evidence --force")
     assert_match "schema: kaios.verify/v1", verify_evidence
@@ -622,7 +622,7 @@ class Kaios < Formula
     assert_match '"artifacts/kaios-run.capsule.json"', setup_json
     assert_match '"id": "verify-project"', setup_json
     setup_workflow = (testpath/"setup-fixture/.github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.72"', setup_workflow
+    assert_match 'KAIOS_VERSION: "0.1.73"', setup_workflow
     assert_match "kaios verify --config 'kaios.json' --evidence --json --force | tee artifacts/kaios-verify.json", setup_workflow
     assert_match "kaios bug-report --config 'kaios.json' --json --out artifacts/kaios-bug-report.json --force", setup_workflow
     assert_match "uses: actions/upload-artifact@v4", setup_workflow
