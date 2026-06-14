@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.41/kaios-0.1.41.tar"
-  sha256 "5788e42f8f77881b5010ccf59cd8324a672a83b39e3aee5f9987b737465777a5"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.42/kaios-0.1.42.tar"
+  sha256 "9fd097000f9bfc1ff7736b8c826dc6e9876e05ff38a458b4b233f8545a85f663"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.41", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.42", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -107,6 +107,9 @@ class Kaios < Formula
     config_validate_help = shell_output("#{bin}/kaios help config validate")
     assert_match "kaios config validate --json", config_validate_help
     assert_match "kaios.config-validation/v1", config_validate_help
+    init_help = shell_output("#{bin}/kaios help init")
+    assert_match "--ci", init_help
+    assert_match ".github/workflows/kaios.yml", init_help
 
     missing_config = shell_output("#{bin}/kaios config show 2>&1", 1)
     assert_match "Config file", missing_config
@@ -221,5 +224,18 @@ class Kaios < Formula
     assert_match '"schema": "kaios.config-validation/v1"', retry_validate_json
     assert_match '"valid": true', retry_validate_json
     assert_match '"workflowName": "retry"', retry_validate_json
+
+    init_ci = shell_output("#{bin}/kaios init --template research --ci")
+    assert_match "created_ci:", init_ci
+    assert_match "git add kaios.json .github/workflows/kaios.yml", init_ci
+    workflow = (testpath/".github/workflows/kaios.yml").read
+    assert_match 'KAIOS_VERSION: "0.1.42"', workflow
+    assert_match "KAIOS_MODEL_PROVIDER: mock", workflow
+    assert_match "kaios doctor --json", workflow
+    assert_match "kaios config validate --config 'kaios.json' --json", workflow
+    assert_match "kaios trace latest --check", workflow
+    init_ci_validate_json = shell_output("#{bin}/kaios config validate --json")
+    assert_match '"workflowName": "research"', init_ci_validate_json
+    assert_match '"valid": true', init_ci_validate_json
   end
 end
