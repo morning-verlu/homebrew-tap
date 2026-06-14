@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.70/kaios-0.1.70.tar"
-  sha256 "be09ee1e3064817bcd4ae8c5e96dab936335e1093d5637b57822b8e1709e5e4e"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.71/kaios-0.1.71.tar"
+  sha256 "1ceb44f245e7d6c1377783b1f09312db30807631b062684c680bc1e02b61bd33"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.70", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.71", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -124,6 +124,12 @@ class Kaios < Formula
     assert_match "kaios quickstart", empty_help
     assert_match "kaios verify --evidence --force", empty_help
 
+    quickstart_help = shell_output("#{bin}/kaios help quickstart")
+    assert_match "Usage: kaios quickstart", quickstart_help
+    assert_match "--no-ci", quickstart_help
+    assert_match "kaios quickstart --no-ci", quickstart_help
+    assert_match "local-only workflow", quickstart_help
+
     empty_runs = shell_output("#{bin}/kaios runs")
     assert_match "No run snapshots found.", empty_runs
     assert_match "kaios quickstart", empty_runs
@@ -143,14 +149,33 @@ class Kaios < Formula
     assert_match "setup: ready config=created ci=created", quickstart
     assert_match "verify: ready", quickstart
     assert_match "ci_artifact: kaios-agent-gate", quickstart
+    assert_match "ci_push_note: Pushing .github/workflows/kaios.yml may require GitHub workflow permission/scope.", quickstart
     assert_predicate testpath/"quickstart-fixture/kaios.json", :exist?
     assert_predicate testpath/"quickstart-fixture/.github/workflows/kaios.yml", :exist?
     assert_predicate testpath/"quickstart-fixture/.kaios/artifacts/kaios-quickstart.capsule.json", :exist?
     quickstart_json = shell_output("cd quickstart-fixture && #{bin}/kaios quickstart --json")
     assert_match '"schema": "kaios.quickstart/v1"', quickstart_json
     assert_match '"status": "ready"', quickstart_json
+    assert_match '"pushPermissionNote": "Pushing .github/workflows/kaios.yml may require GitHub workflow permission/scope."', quickstart_json
     assert_match '"id": "stage-generated-files"', quickstart_json
     (testpath/"quickstart-fixture").rmtree
+
+    (testpath/"quickstart-local-fixture").mkpath
+    quickstart_local = shell_output("cd quickstart-local-fixture && #{bin}/kaios quickstart --no-ci")
+    assert_match "KAI OS quickstart", quickstart_local
+    assert_match "schema: kaios.quickstart/v1", quickstart_local
+    assert_match "status: ready", quickstart_local
+    assert_match "setup: ready config=created ci=skipped", quickstart_local
+    assert_match "git add kaios.json", quickstart_local
+    refute_match "ci_artifact: kaios-agent-gate", quickstart_local
+    assert_predicate testpath/"quickstart-local-fixture/kaios.json", :exist?
+    refute_predicate testpath/"quickstart-local-fixture/.github/workflows/kaios.yml", :exist?
+    quickstart_local_json = shell_output("cd quickstart-local-fixture && #{bin}/kaios quickstart --local --json")
+    assert_match '"schema": "kaios.quickstart/v1"', quickstart_local_json
+    assert_match '"status": "ready"', quickstart_local_json
+    assert_match '"action": "skipped"', quickstart_local_json
+    assert_match '"ciArtifact": null', quickstart_local_json
+    (testpath/"quickstart-local-fixture").rmtree
 
     unexpected_runs = shell_output("#{bin}/kaios runs extra 2>&1", 1)
     assert_match "Unexpected runs argument 'extra'.", unexpected_runs
@@ -209,7 +234,7 @@ class Kaios < Formula
     assert_match "kaios replay --file #{capsule_path}", latest_capsule
     capsule_json_file = Pathname.new(capsule_path).read
     assert_match '"schema": "kaios.run-capsule/v1"', capsule_json_file
-    assert_match '"version": "0.1.70"', capsule_json_file
+    assert_match '"version": "0.1.71"', capsule_json_file
     assert_match '"snapshotSha256"', capsule_json_file
     assert_match '"embeddedSnapshotSha256"', capsule_json_file
     assert_match '"traceSha256"', capsule_json_file
@@ -511,7 +536,7 @@ class Kaios < Formula
     assert_match "ci_artifact_paths: artifacts/kaios-verify.json, artifacts/kaios-run.capsule.json, artifacts/kaios-bug-report.json", init_ci
     assert_match "git add kaios.json .github/workflows/kaios.yml", init_ci
     workflow = (testpath/".github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.70"', workflow
+    assert_match 'KAIOS_VERSION: "0.1.71"', workflow
     assert_match "KAIOS_MODEL_PROVIDER: mock", workflow
     assert_match "set -euo pipefail", workflow
     assert_match "kaios verify --config 'kaios.json' --evidence --json --force | tee artifacts/kaios-verify.json", workflow
@@ -571,7 +596,7 @@ class Kaios < Formula
     assert_match '"artifacts/kaios-run.capsule.json"', setup_json
     assert_match '"id": "verify-project"', setup_json
     setup_workflow = (testpath/"setup-fixture/.github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.70"', setup_workflow
+    assert_match 'KAIOS_VERSION: "0.1.71"', setup_workflow
     assert_match "kaios verify --config 'kaios.json' --evidence --json --force | tee artifacts/kaios-verify.json", setup_workflow
     assert_match "kaios bug-report --config 'kaios.json' --json --out artifacts/kaios-bug-report.json --force", setup_workflow
     assert_match "uses: actions/upload-artifact@v4", setup_workflow
