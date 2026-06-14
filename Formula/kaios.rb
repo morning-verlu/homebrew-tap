@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.45/kaios-0.1.45.tar"
-  sha256 "88f5ef1eafced13544777a13c9b313c56d46f4c58ceeb29253bdfb1898e5e574"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.46/kaios-0.1.46.tar"
+  sha256 "1160d8b8a83a736c68ce670b95800686f1220efa877ffc4da544038519f104c4"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.45", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.46", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -255,7 +255,7 @@ class Kaios < Formula
     assert_match "created_ci:", init_ci
     assert_match "git add kaios.json .github/workflows/kaios.yml", init_ci
     workflow = (testpath/".github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.45"', workflow
+    assert_match 'KAIOS_VERSION: "0.1.46"', workflow
     assert_match "KAIOS_MODEL_PROVIDER: mock", workflow
     assert_match "kaios verify --config 'kaios.json'", workflow
     refute_match "kaios doctor --json", workflow
@@ -277,7 +277,7 @@ class Kaios < Formula
     assert_match '"requestedTemplate": "research"', setup_json
     assert_match '"action": "existing"', setup_json
     setup_workflow = (testpath/"setup-fixture/.github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.45"', setup_workflow
+    assert_match 'KAIOS_VERSION: "0.1.46"', setup_workflow
     assert_match "kaios verify --config 'kaios.json'", setup_workflow
     verify_output = shell_output("cd setup-fixture && #{bin}/kaios verify")
     assert_match "schema: kaios.verify/v1", verify_output
@@ -286,5 +286,19 @@ class Kaios < Formula
     verify_json = shell_output("cd setup-fixture && #{bin}/kaios verify --json")
     assert_match '"schema": "kaios.verify/v1"', verify_json
     assert_match '"status": "ready"', verify_json
+
+    (testpath/"custom-config-fixture").mkpath
+    (testpath/"custom-config-fixture/kaios.json").write '{"name":"","agents":[]}'
+    custom_setup = shell_output("cd custom-config-fixture && #{bin}/kaios setup --config workflows/research.json --ci")
+    assert_match "doctor: ready", custom_setup
+    assert_match "validation: valid", custom_setup
+    assert_match "kaios verify --config workflows/research.json", custom_setup
+    custom_workflow = (testpath/"custom-config-fixture/.github/workflows/kaios.yml").read
+    assert_match "kaios verify --config 'workflows/research.json'", custom_workflow
+    custom_verify = shell_output("cd custom-config-fixture && #{bin}/kaios verify --config workflows/research.json")
+    assert_match "status: ready", custom_verify
+    assert_match "doctor: ready", custom_verify
+    assert_match "config: valid", custom_verify
+    refute_match "Config field 'name' cannot be blank.", custom_verify
   end
 end
