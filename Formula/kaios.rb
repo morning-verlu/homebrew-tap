@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.43/kaios-0.1.43.tar"
-  sha256 "8b83324f444d118177048743596b5b3fa0f974f2e25611d4f4111cc8f6b58323"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.44/kaios-0.1.44.tar"
+  sha256 "5b357c737f4ff502c928750cca69594834ebdc51c4f9b528139f0ab9d137fc2b"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.43", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.44", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -124,6 +124,10 @@ class Kaios < Formula
     config_validate_help = shell_output("#{bin}/kaios help config validate")
     assert_match "kaios config validate --json", config_validate_help
     assert_match "kaios.config-validation/v1", config_validate_help
+    setup_help = shell_output("#{bin}/kaios help setup")
+    assert_match "Usage: kaios setup", setup_help
+    assert_match "kaios.setup/v1", setup_help
+    assert_match "Existing config and CI files are kept", setup_help
     init_help = shell_output("#{bin}/kaios help init")
     assert_match "--ci", init_help
     assert_match ".github/workflows/kaios.yml", init_help
@@ -246,7 +250,7 @@ class Kaios < Formula
     assert_match "created_ci:", init_ci
     assert_match "git add kaios.json .github/workflows/kaios.yml", init_ci
     workflow = (testpath/".github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.43"', workflow
+    assert_match 'KAIOS_VERSION: "0.1.44"', workflow
     assert_match "KAIOS_MODEL_PROVIDER: mock", workflow
     assert_match "kaios doctor --json", workflow
     assert_match "kaios config validate --config 'kaios.json' --json", workflow
@@ -254,5 +258,20 @@ class Kaios < Formula
     init_ci_validate_json = shell_output("#{bin}/kaios config validate --json")
     assert_match '"workflowName": "research"', init_ci_validate_json
     assert_match '"valid": true', init_ci_validate_json
+
+    (testpath/"setup-fixture").mkpath
+    setup_output = shell_output("cd setup-fixture && #{bin}/kaios setup --ci")
+    assert_match "schema: kaios.setup/v1", setup_output
+    assert_match "requested_template: research", setup_output
+    assert_match "config_action: created", setup_output
+    assert_match "validation: valid", setup_output
+    assert_match "ci: created", setup_output
+    setup_json = shell_output("cd setup-fixture && #{bin}/kaios setup --json")
+    assert_match '"schema": "kaios.setup/v1"', setup_json
+    assert_match '"requestedTemplate": "research"', setup_json
+    assert_match '"action": "existing"', setup_json
+    setup_workflow = (testpath/"setup-fixture/.github/workflows/kaios.yml").read
+    assert_match 'KAIOS_VERSION: "0.1.44"', setup_workflow
+    assert_match "kaios config validate --config 'kaios.json' --json", setup_workflow
   end
 end
