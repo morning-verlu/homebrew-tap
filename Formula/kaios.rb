@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.12/kaios-0.1.12.tar"
-  sha256 "887838dd568218e785be6d1364998bc9f1fe8f728924b7ec5d52a44d159757dc"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.13/kaios-0.1.13.tar"
+  sha256 "fe883e5c2c63380a8760b2cdd666c3bd429aee4db974aabd1b067e3738f6a57b"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -41,5 +41,21 @@ class Kaios < Formula
     context_output = shell_output("#{bin}/kaios run --context . --out artifacts/context.md \"summarize this project\"")
     assert_match "context: 1 file(s)", context_output
     assert_match "Context:", (testpath/"artifacts/context.md").read
+
+    (testpath/"retry.json").write <<~JSON
+      {
+        "name": "retry",
+        "agents": [
+          {
+            "id": "worker",
+            "tools": ["echo"],
+            "retries": 2
+          }
+        ]
+      }
+    JSON
+
+    retry_show = shell_output("#{bin}/kaios config show --config retry.json")
+    assert_match "retries=2", retry_show
   end
 end
