@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.10/kaios-0.1.10.tar"
-  sha256 "450c95cc198a6403765731f962ba90bc69f747970cb4945bdca7c34181e2dd09"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.11/kaios-0.1.11.tar"
+  sha256 "e547928bdef8edee64f9aad921c6c20f9c3adae8415851ac64f1d38b21f25fe3"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -26,7 +26,15 @@ class Kaios < Formula
     assert_match "RUN #{run_id}", shell_output("#{bin}/kaios ps #{run_id}")
 
     (testpath/"README.md").write "# KAI OS\nContext fixture\n"
-    context_output = shell_output("#{bin}/kaios run --context README.md --out artifacts/context.md \"summarize this project\"")
+    (testpath/".kaiosignore").write "secrets/\n"
+    (testpath/"secrets").mkpath
+    (testpath/"secrets/private.md").write "ignore me\n"
+
+    preview = shell_output("#{bin}/kaios context .")
+    assert_match "README.md", preview
+    refute_match "secrets/private.md", preview
+
+    context_output = shell_output("#{bin}/kaios run --context . --out artifacts/context.md \"summarize this project\"")
     assert_match "context: 1 file(s)", context_output
     assert_match "Context:", (testpath/"artifacts/context.md").read
   end
