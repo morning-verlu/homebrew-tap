@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.24/kaios-0.1.24.tar"
-  sha256 "ca32ebba3af11a56461714311dfd662acfafa0c18630963a830c6b984f815543"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.25/kaios-0.1.25.tar"
+  sha256 "aeffbd5c8c05b4ec2554abba3eb128407477a340bf89d59ad7edc46353d5a92a"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.24", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.25", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -51,6 +51,10 @@ class Kaios < Formula
     bad_option = shell_output("#{bin}/kaios run --bad-option hello 2>&1", 1)
     assert_match "Unknown run option '--bad-option'", bad_option
     assert_match "Run 'kaios help run' for examples.", bad_option
+
+    typo = shell_output("#{bin}/kaios analyse . 2>&1", 1)
+    assert_match "Unknown command 'analyse'", typo
+    assert_match "Did you mean 'kaios analyze'?", typo
 
     run_id = output[/run_id: (run-[a-f0-9]+)/, 1]
     assert_match "RUN #{run_id}", shell_output("#{bin}/kaios ps #{run_id}")
