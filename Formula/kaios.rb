@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.37/kaios-0.1.37.tar"
-  sha256 "e2a81e888e683e8ea56825106463c4741bc7275a57aa2a09d47ed81b7ac2ef18"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.38/kaios-0.1.38.tar"
+  sha256 "a24c4adf0541be981cd00ab685f731638f0940d952f328f2895de1d056963a03"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.37", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.38", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -62,6 +62,9 @@ class Kaios < Formula
     latest_trace_json = shell_output("#{bin}/kaios trace latest --json")
     assert_match '"schema": "kaios.process-trace/v1"', latest_trace_json
     assert_match '"processCount": 3', latest_trace_json
+    latest_trace_check = shell_output("#{bin}/kaios trace latest --check")
+    assert_match "status: valid", latest_trace_check
+    assert_match "processes: 3", latest_trace_check
 
     run_help = shell_output("#{bin}/kaios run --help")
     assert_match "Usage: kaios run", run_help
@@ -120,6 +123,12 @@ class Kaios < Formula
     trace_json = shell_output("#{bin}/kaios trace #{run_id} --json")
     assert_match '"schema": "kaios.process-trace/v1"', trace_json
     assert_match '"processCount": 3', trace_json
+    trace_check = shell_output("#{bin}/kaios trace #{run_id} --check")
+    assert_match "schema: kaios.process-trace/v1", trace_check
+    assert_match "status: valid", trace_check
+    trace_help = shell_output("#{bin}/kaios help trace")
+    assert_match "kaios trace latest --check", trace_help
+    assert_match "validate the trace contract", trace_help
     latest_run_trace_json = shell_output("#{bin}/kaios trace latest --json")
     assert_match "\"runId\": \"#{run_id}\"", latest_run_trace_json
     trace_out = shell_output("#{bin}/kaios trace #{run_id} --json --out artifacts/trace.json")
