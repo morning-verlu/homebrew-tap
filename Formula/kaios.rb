@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.42/kaios-0.1.42.tar"
-  sha256 "9fd097000f9bfc1ff7736b8c826dc6e9876e05ff38a458b4b233f8545a85f663"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.43/kaios-0.1.43.tar"
+  sha256 "8b83324f444d118177048743596b5b3fa0f974f2e25611d4f4111cc8f6b58323"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.42", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.43", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -76,6 +76,23 @@ class Kaios < Formula
     latest_trace_check = shell_output("#{bin}/kaios trace latest --check")
     assert_match "status: valid", latest_trace_check
     assert_match "processes: 3", latest_trace_check
+    bug_report_help = shell_output("#{bin}/kaios help bug-report")
+    assert_match "Usage: kaios bug-report", bug_report_help
+    assert_match "kaios.bug-report/v1", bug_report_help
+    bug_report = shell_output("#{bin}/kaios bug-report")
+    assert_match "# KAI OS Bug Report", bug_report
+    assert_match "kaios.bug-report/v1", bug_report
+    assert_match "## Trace Contract", bug_report
+    assert_match "run_id:", bug_report
+    refute_match "secret-key", bug_report
+    bug_report_json = shell_output("#{bin}/kaios bug-report --json")
+    assert_match '"schema": "kaios.bug-report/v1"', bug_report_json
+    assert_match '"latestRun"', bug_report_json
+    assert_match '"trace"', bug_report_json
+    bug_report_out = shell_output("#{bin}/kaios bug-report --out artifacts/kaios-bug-report.md --force")
+    assert_match "bug_report:", bug_report_out
+    assert_match "format: markdown", bug_report_out
+    assert_match "# KAI OS Bug Report", (testpath/"artifacts/kaios-bug-report.md").read
 
     run_help = shell_output("#{bin}/kaios run --help")
     assert_match "Usage: kaios run", run_help
@@ -229,7 +246,7 @@ class Kaios < Formula
     assert_match "created_ci:", init_ci
     assert_match "git add kaios.json .github/workflows/kaios.yml", init_ci
     workflow = (testpath/".github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.42"', workflow
+    assert_match 'KAIOS_VERSION: "0.1.43"', workflow
     assert_match "KAIOS_MODEL_PROVIDER: mock", workflow
     assert_match "kaios doctor --json", workflow
     assert_match "kaios config validate --config 'kaios.json' --json", workflow
