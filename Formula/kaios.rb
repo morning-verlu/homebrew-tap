@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.83/kaios-0.1.83.tar"
-  sha256 "90e3c5a8c2231d443f49d3657110d12393550bf28e1647f7e71b90d9a7456eb8"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.84/kaios-0.1.84.tar"
+  sha256 "73438534b930e9d0de1cfdb80d10d28cff192ecfcd11c3d7dfc6f87fd9ed83a6"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.83", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.84", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -40,6 +40,17 @@ class Kaios < Formula
     assert_match '"command": "kaios doctor --fix --dry-run --ci"', doctor_json
     assert_match '"id": "setup-project"', doctor_json
     assert_match '"command": "kaios setup --ci"', doctor_json
+    next_report = shell_output("#{bin}/kaios next")
+    assert_match "KAI OS next", next_report
+    assert_match "schema: kaios.next/v1", next_report
+    assert_match "status: repair", next_report
+    assert_match "command: kaios doctor --fix --dry-run --ci", next_report
+    assert_match "fix_first: kaios doctor --fix --dry-run --ci", next_report
+    next_json = shell_output("#{bin}/kaios next --json")
+    assert_match '"schema": "kaios.next/v1"', next_json
+    assert_match '"status": "repair"', next_json
+    assert_match '"id": "repair-project"', next_json
+    assert_match '"command": "kaios doctor --fix --dry-run --ci"', next_json
 
     (testpath/"missing-config-fixture").mkpath
     missing_verify = shell_output("cd missing-config-fixture && #{bin}/kaios verify --evidence --force 2>&1", 2)
@@ -169,6 +180,8 @@ class Kaios < Formula
     (testpath/"custom-config-diagnostics-fixture").rmtree
 
     help = shell_output("#{bin}/kaios help")
+    assert_match "Need the next move?", help
+    assert_match "kaios next", help
     assert_match "Quick start (one command):", help
     assert_match "kaios quickstart", help
     assert_match "Manual path (3 steps):", help
@@ -181,9 +194,17 @@ class Kaios < Formula
     assert_match "kaios ls", help
 
     empty_help = shell_output("#{bin}/kaios")
+    assert_match "Need the next move?", empty_help
+    assert_match "kaios next", empty_help
     assert_match "Quick start (one command):", empty_help
     assert_match "kaios quickstart", empty_help
     assert_match "kaios gate", empty_help
+
+    next_help = shell_output("#{bin}/kaios help next")
+    assert_match "Usage: kaios next", next_help
+    assert_match "single best next command", next_help
+    assert_match "read-only", next_help
+    assert_match "kaios.next/v1", next_help
 
     quickstart_help = shell_output("#{bin}/kaios help quickstart")
     assert_match "Usage: kaios quickstart", quickstart_help
@@ -337,7 +358,7 @@ class Kaios < Formula
     assert_match "kaios replay --file #{capsule_path}", latest_capsule
     capsule_json_file = Pathname.new(capsule_path).read
     assert_match '"schema": "kaios.run-capsule/v1"', capsule_json_file
-    assert_match '"version": "0.1.83"', capsule_json_file
+    assert_match '"version": "0.1.84"', capsule_json_file
     assert_match '"snapshotSha256"', capsule_json_file
     assert_match '"embeddedSnapshotSha256"', capsule_json_file
     assert_match '"traceSha256"', capsule_json_file
@@ -670,7 +691,7 @@ class Kaios < Formula
     assert_match "ci_artifact_paths: artifacts/kaios-verify.json, artifacts/kaios-run.capsule.json, artifacts/kaios-bug-report.json", init_ci
     assert_match "git add kaios.json .github/workflows/kaios.yml", init_ci
     workflow = (testpath/".github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.83"', workflow
+    assert_match 'KAIOS_VERSION: "0.1.84"', workflow
     assert_match "KAIOS_MODEL_PROVIDER: mock", workflow
     assert_match "set -euo pipefail", workflow
     assert_match %q(kaios gate --config 'kaios.json' --summary-out "$GITHUB_STEP_SUMMARY" --json | tee artifacts/kaios-verify.json), workflow
@@ -754,6 +775,12 @@ class Kaios < Formula
     assert_match '"kaios gate --config kaios.json"', configured_bug_report_json
     assert_match '"id": "verify-project"', configured_bug_report_json
     refute_match '"kaios setup --ci"', configured_bug_report_json
+    configured_next_json = shell_output("#{bin}/kaios next --json")
+    assert_match '"schema": "kaios.next/v1"', configured_next_json
+    assert_match '"status": "ready"', configured_next_json
+    assert_match '"id": "show-processes"', configured_next_json
+    assert_match '"command": "kaios ps"', configured_next_json
+    assert_match '"fixFirst": null', configured_next_json
 
     (testpath/"setup-fixture").mkpath
     setup_output = shell_output("cd setup-fixture && #{bin}/kaios setup --ci")
@@ -773,7 +800,7 @@ class Kaios < Formula
     assert_match '"artifacts/kaios-run.capsule.json"', setup_json
     assert_match '"id": "verify-project"', setup_json
     setup_workflow = (testpath/"setup-fixture/.github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.83"', setup_workflow
+    assert_match 'KAIOS_VERSION: "0.1.84"', setup_workflow
     assert_match %q(kaios gate --config 'kaios.json' --summary-out "$GITHUB_STEP_SUMMARY" --json | tee artifacts/kaios-verify.json), setup_workflow
     assert_match "kaios bug-report --config 'kaios.json' --json --out artifacts/kaios-bug-report.json --force", setup_workflow
     assert_match "uses: actions/upload-artifact@v4", setup_workflow
