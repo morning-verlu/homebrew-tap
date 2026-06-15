@@ -1,8 +1,8 @@
 class Kaios < Formula
   desc "AI Agent Operating System in Kotlin"
   homepage "https://morning-verlu.github.io/KAI/"
-  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.79/kaios-0.1.79.tar"
-  sha256 "cd2ae209c8029ea5260df86e88147092937a71d2bc3531cc20f6c3ff679a1308"
+  url "https://github.com/morning-verlu/KAI/releases/download/v0.1.80/kaios-0.1.80.tar"
+  sha256 "bdf74ae3cded5d67f3bc0402fc2d4f888f8ad893c490e24c93c2d7843c37a0db"
   license "Apache-2.0"
 
   depends_on "openjdk@17"
@@ -16,7 +16,7 @@ class Kaios < Formula
   end
 
   test do
-    assert_match "kaios 0.1.79", shell_output("#{bin}/kaios --version")
+    assert_match "kaios 0.1.80", shell_output("#{bin}/kaios --version")
 
     doctor = shell_output("#{bin}/kaios doctor")
     assert_match "summary: ready", doctor
@@ -141,8 +141,11 @@ class Kaios < Formula
 
     quickstart_help = shell_output("#{bin}/kaios help quickstart")
     assert_match "Usage: kaios quickstart", quickstart_help
+    assert_match "--dry-run", quickstart_help
+    assert_match "kaios quickstart --dry-run", quickstart_help
     assert_match "--no-ci", quickstart_help
     assert_match "kaios quickstart --no-ci", quickstart_help
+    assert_match "preview generated files and commands without writing anything", quickstart_help
     assert_match "local-only workflow", quickstart_help
     alias_help = shell_output("#{bin}/kaios help start")
     assert_match "Usage: kaios quickstart", alias_help
@@ -161,6 +164,21 @@ class Kaios < Formula
     assert_match '"count": 0', empty_runs_json
 
     (testpath/"quickstart-fixture").mkpath
+    quickstart_plan = shell_output("cd quickstart-fixture && #{bin}/kaios quickstart --dry-run")
+    assert_match "status: planned", quickstart_plan
+    assert_match "dry_run: true", quickstart_plan
+    assert_match "config: created (kaios.json)", quickstart_plan
+    assert_match "ci: created (.github/workflows/kaios.yml)", quickstart_plan
+    assert_match "Dry run only previews the plan; no files were written.", quickstart_plan
+    refute_predicate testpath/"quickstart-fixture/kaios.json", :exist?
+    refute_predicate testpath/"quickstart-fixture/.github/workflows/kaios.yml", :exist?
+    refute_predicate testpath/"quickstart-fixture/.kaios", :exist?
+    quickstart_plan_json = shell_output("cd quickstart-fixture && #{bin}/kaios quickstart --dry-run --json")
+    assert_match '"status": "planned"', quickstart_plan_json
+    assert_match '"dryRun": true', quickstart_plan_json
+    assert_match '"demo": null', quickstart_plan_json
+    assert_match '"setup": null', quickstart_plan_json
+    assert_match '"verify": null', quickstart_plan_json
     quickstart = shell_output("cd quickstart-fixture && #{bin}/kaios quickstart")
     assert_match "KAI OS quickstart", quickstart
     assert_match "schema: kaios.quickstart/v1", quickstart
@@ -175,6 +193,8 @@ class Kaios < Formula
     quickstart_json = shell_output("cd quickstart-fixture && #{bin}/kaios quickstart --json")
     assert_match '"schema": "kaios.quickstart/v1"', quickstart_json
     assert_match '"status": "ready"', quickstart_json
+    assert_match '"plan": {', quickstart_json
+    assert_match '"dryRun": false', quickstart_json
     assert_match '"pushPermissionNote": "Pushing .github/workflows/kaios.yml may require GitHub workflow permission/scope."', quickstart_json
     assert_match '"id": "stage-generated-files"', quickstart_json
     (testpath/"quickstart-fixture").rmtree
@@ -271,7 +291,7 @@ class Kaios < Formula
     assert_match "kaios replay --file #{capsule_path}", latest_capsule
     capsule_json_file = Pathname.new(capsule_path).read
     assert_match '"schema": "kaios.run-capsule/v1"', capsule_json_file
-    assert_match '"version": "0.1.79"', capsule_json_file
+    assert_match '"version": "0.1.80"', capsule_json_file
     assert_match '"snapshotSha256"', capsule_json_file
     assert_match '"embeddedSnapshotSha256"', capsule_json_file
     assert_match '"traceSha256"', capsule_json_file
@@ -593,7 +613,7 @@ class Kaios < Formula
     assert_match "ci_artifact_paths: artifacts/kaios-verify.json, artifacts/kaios-run.capsule.json, artifacts/kaios-bug-report.json", init_ci
     assert_match "git add kaios.json .github/workflows/kaios.yml", init_ci
     workflow = (testpath/".github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.79"', workflow
+    assert_match 'KAIOS_VERSION: "0.1.80"', workflow
     assert_match "KAIOS_MODEL_PROVIDER: mock", workflow
     assert_match "set -euo pipefail", workflow
     assert_match %q(kaios gate --config 'kaios.json' --summary-out "$GITHUB_STEP_SUMMARY" --json | tee artifacts/kaios-verify.json), workflow
@@ -695,7 +715,7 @@ class Kaios < Formula
     assert_match '"artifacts/kaios-run.capsule.json"', setup_json
     assert_match '"id": "verify-project"', setup_json
     setup_workflow = (testpath/"setup-fixture/.github/workflows/kaios.yml").read
-    assert_match 'KAIOS_VERSION: "0.1.79"', setup_workflow
+    assert_match 'KAIOS_VERSION: "0.1.80"', setup_workflow
     assert_match %q(kaios gate --config 'kaios.json' --summary-out "$GITHUB_STEP_SUMMARY" --json | tee artifacts/kaios-verify.json), setup_workflow
     assert_match "kaios bug-report --config 'kaios.json' --json --out artifacts/kaios-bug-report.json --force", setup_workflow
     assert_match "uses: actions/upload-artifact@v4", setup_workflow
